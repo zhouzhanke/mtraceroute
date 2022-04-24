@@ -70,7 +70,6 @@ struct probe *mt_send(struct mt *a, int if_index, const uint8_t *buf,
         }
     }
 
-    // TODO：时间计算可能错误,但可能其他地方有误，上面的发送间隔不会触发，导致结果没有问题
     if (a->probes_count == 0)
     {
         clock_gettime(CLOCK_REALTIME, &a->first_probe_time);
@@ -95,7 +94,7 @@ static void mt_receive(struct interface *i, const uint8_t *buf,
         struct probe *p = (struct probe *)it->data;
         if (p->sent_time.tv_sec > 0 && p->response_len == 0)
         {
-            probe_match(p, buf, len, &ts); // 没有处理失败情况
+            probe_match(p, buf, len, &ts);
         }
     }
 }
@@ -374,10 +373,6 @@ int main(int argc, char *argv[])
         // m = ICMP/UDP/TCP
         // t = MAX TTL
         // p = 同时探测p个跳数
-        // 发现问题：
-        // 1 - 同时探测多个跳数，但不对回收过程进行控制，导致回收是无序的。
-        // 2 - 输出时因为回收过程是无序的，所以输出是无序的，并且如果提前找到最后一跳，就会忽略部分结果。
-        // 3 - 时间计算部分是在sleep后所以结构上是错误的，但是因为sleep永远不会触发，所以结果是正确的。
         mt_traceroute(a, d, args->m, args->t, args->p);
     }
 

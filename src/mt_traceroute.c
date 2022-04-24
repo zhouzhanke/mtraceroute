@@ -159,8 +159,7 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
             packet_destroy(p);
         }
 
-        // 等待并回收探针，如果失败就重发直到到达设定重发次数。
-        // 多个探针共用一个通道，回收也没有做对比，所以是无序的
+        // 回收探针，如果失败，重新发送
         mt_wait(a, dst->if_index);
 
         // 获取回收到的探针
@@ -170,7 +169,6 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
         struct list *it = i->probes;
 
         // 输出探测结果
-        // 特殊情况下会忽略部分结果
         while (i->probes->count > 0)
         {
             struct probe *probe = (struct probe *)list_pop(i->probes);
