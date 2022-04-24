@@ -32,18 +32,19 @@
 #include <stdint.h>
 #include "packet.h"
 
-#define ETH_H_SIZE   14
+#define ETH_H_SIZE 14
 #define ETH_ADDR_LEN 6
 
 // EtherTypes
 #define ETH_TYPE_IPV4 0x0800
-#define ETH_TYPE_ARP  0x0806
+#define ETH_TYPE_ARP 0x0806
 #define ETH_TYPE_IPV6 0x86dd
 
 // Ethernet II (DIX) header
-struct eth_hdr {
-    uint8_t  dst_addr[ETH_ADDR_LEN];
-    uint8_t  src_addr[ETH_ADDR_LEN];
+struct eth_hdr
+{
+    uint8_t dst_addr[ETH_ADDR_LEN];
+    uint8_t src_addr[ETH_ADDR_LEN];
     uint16_t type;
 };
 

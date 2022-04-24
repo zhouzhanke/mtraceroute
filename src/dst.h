@@ -32,7 +32,8 @@
 #include "mt.h"
 #include "addr.h"
 
-struct dst {
+struct dst
+{
     struct addr *ip_dst;
     struct addr *ip_src;
     struct addr *mac_dst;

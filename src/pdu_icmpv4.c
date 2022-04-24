@@ -34,15 +34,16 @@
 #include "checksum.h"
 
 int pdu_icmpv4(struct packet *p, uint8_t type, uint8_t code,
-               uint16_t checksum, uint32_t body) {
+               uint16_t checksum, uint32_t body)
+{
 
     struct icmpv4_hdr hdr;
     memset(&hdr, 0, ICMPV4_H_SIZE);
 
-    hdr.type     = type;
-    hdr.code     = code;
+    hdr.type = type;
+    hdr.code = code;
     hdr.checksum = checksum;
-    hdr.body     = body;
+    hdr.body = body;
 
     uint8_t tag = packet_block_append(p, PACKET_BLOCK_ICMPV4, &hdr,
                                       ICMPV4_H_SIZE);
@@ -51,16 +52,19 @@ int pdu_icmpv4(struct packet *p, uint8_t type, uint8_t code,
 }
 
 int pdu_icmpv4_echo(struct packet *p, uint16_t checksum,
-                    uint16_t id, uint16_t seq_num) {
+                    uint16_t id, uint16_t seq_num)
+{
 
     uint32_t body = htonl((id << 16) + seq_num);
     return pdu_icmpv4(p, ICMPV4_TYPE_ECHO, ICMPV4_NO_CODE, checksum, body);
 }
 
-int pdu_icmpv4_checksum(struct packet *p, int tag) {
+int pdu_icmpv4_checksum(struct packet *p, int tag)
+{
 
     struct packet_block *b = packet_block_get(p, tag);
-    if (b == NULL || b->type != PACKET_BLOCK_ICMPV4) return -1;
+    if (b == NULL || b->type != PACKET_BLOCK_ICMPV4)
+        return -1;
 
     struct icmpv4_hdr *hdr = (struct icmpv4_hdr *)&p->buf[b->position];
 

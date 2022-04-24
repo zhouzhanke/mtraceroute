@@ -30,47 +30,59 @@
 #include <string.h>
 #include "probe.h"
 
-struct probe *probe_create(const uint8_t *probe, uint32_t probe_len, match_fn fn) {
+struct probe *probe_create(const uint8_t *probe, uint32_t probe_len, match_fn fn)
+{
     struct probe *p = malloc(sizeof(*p));
-    if (p == NULL) return p;
+    if (p == NULL)
+        return p;
     memset(p, 0, sizeof(*p));
 
     uint8_t *buf = malloc(probe_len);
-    if (buf == NULL) {
+    if (buf == NULL)
+    {
         free(p);
         return NULL;
     }
     memcpy(buf, probe, probe_len);
-    
-    p->retries   = 0;
-    p->fn        = fn;
-    p->probe     = buf;
+
+    p->retries = 0;
+    p->fn = fn;
+    p->probe = buf;
     p->probe_len = probe_len;
 
     return p;
 }
 
-void probe_destroy(struct probe *p) {
-    if (p->probe) free(p->probe);
-    if (p->response) free(p->response);
+void probe_destroy(struct probe *p)
+{
+    if (p->probe)
+        free(p->probe);
+    if (p->response)
+        free(p->response);
     free(p);
 }
 
-int probe_timeout(const struct probe *p, int timeout) {
+int probe_timeout(const struct probe *p, int timeout)
+{
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
-    if ((now.tv_sec - p->sent_time.tv_sec) >= timeout) return 1;
+    if ((now.tv_sec - p->sent_time.tv_sec) >= timeout)
+        return 1;
     return 0;
 }
 
 int probe_match(struct probe *p, const uint8_t *buf, uint32_t len,
-                const struct timespec *ts) {
-    if (p->fn == NULL) return -1;
+                const struct timespec *ts)
+{
+    if (p->fn == NULL)
+        return -1;
 
-    if (p->fn(p->probe, p->probe_len, buf, len)) {
+    if (p->fn(p->probe, p->probe_len, buf, len))
+    {
         p->response = malloc(len);
-        if (p->response == NULL) return -1;
-        p->response_len  = len;
+        if (p->response == NULL)
+            return -1;
+        p->response_len = len;
         p->response_time = *ts;
         memcpy(p->response, buf, len);
         return 1;

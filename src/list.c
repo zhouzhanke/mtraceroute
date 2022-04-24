@@ -29,9 +29,11 @@
 #include <stdlib.h>
 #include "list.h"
 
-struct list *list_create() {
+struct list *list_create()
+{
     struct list *l = malloc(sizeof(*l));
-    if (l == NULL) return NULL;
+    if (l == NULL)
+        return NULL;
 
     l->first = NULL;
     l->last = NULL;
@@ -39,22 +41,29 @@ struct list *list_create() {
     return l;
 }
 
-void list_destroy(struct list *l) {
-    while (l->count > 0) list_pop(l);
+void list_destroy(struct list *l)
+{
+    while (l->count > 0)
+        list_pop(l);
     free(l);
 }
 
-int list_insert(struct list *l, void *data) {
+int list_insert(struct list *l, void *data)
+{
     struct list_item *i = malloc(sizeof(*i));
-    if (i == NULL) return -1;
+    if (i == NULL)
+        return -1;
 
     i->data = data;
     i->next = NULL;
     i->previous = NULL;
 
-    if (l->count == 0){ // list is empty
+    if (l->count == 0)
+    { // list is empty
         l->first = i;
-    } else {
+    }
+    else
+    {
         i->previous = l->last;
         l->last->next = i;
     }
@@ -66,20 +75,29 @@ int list_insert(struct list *l, void *data) {
 
 // Remove the first item that is equal (cmp_fn) to cmp_data and returns the data
 void *list_remove(struct list *l, const void *cmp_data,
-                  int (*cmp_fn)(const void *, const void *)) {
+                  int (*cmp_fn)(const void *, const void *))
+{
     struct list_item *i;
-    for (i = l->first; i != NULL; i = i->next) {
+    for (i = l->first; i != NULL; i = i->next)
+    {
         void *data = i->data;
-        if (cmp_fn(cmp_data, data) == 0) {
-            if (i->previous == NULL) {
+        if (cmp_fn(cmp_data, data) == 0)
+        {
+            if (i->previous == NULL)
+            {
                 l->first = i->next;
-            } else {
+            }
+            else
+            {
                 i->previous->next = i->next;
             }
 
-            if (i->next == NULL) {
+            if (i->next == NULL)
+            {
                 l->last = i->previous;
-            } else {
+            }
+            else
+            {
                 i->next->previous = i->previous;
             }
 
@@ -92,15 +110,20 @@ void *list_remove(struct list *l, const void *cmp_data,
 }
 
 // Remove the first item and returns the data
-void *list_pop(struct list *l) {
-    if (l->count == 0) return NULL;
+void *list_pop(struct list *l)
+{
+    if (l->count == 0)
+        return NULL;
     struct list_item *i = l->first;
     void *data = i->data;
 
-    if (i->next == NULL) {
+    if (i->next == NULL)
+    {
         l->first = NULL;
         l->last = NULL;
-    } else {
+    }
+    else
+    {
         i->next->previous = NULL;
         l->first = i->next;
     }
@@ -111,11 +134,14 @@ void *list_pop(struct list *l) {
 }
 
 struct list_item *list_find(struct list *l, const void *cmp_data,
-                            int (*cmp_fn)(const void *, const void *)) {
+                            int (*cmp_fn)(const void *, const void *))
+{
     struct list_item *i;
-    for (i = l->first; i != NULL; i = i->next) {
+    for (i = l->first; i != NULL; i = i->next)
+    {
         void *data = i->data;
-        if (cmp_fn(cmp_data, data) == 0) {
+        if (cmp_fn(cmp_data, data) == 0)
+        {
             return i;
         }
     }
@@ -123,16 +149,20 @@ struct list_item *list_find(struct list *l, const void *cmp_data,
 }
 
 int list_insert_unique(struct list *l, void *data,
-                       int (*cmp_fn)(const void *, const void *)) {
-    if (list_find(l, data, cmp_fn) != NULL) return -1;
+                       int (*cmp_fn)(const void *, const void *))
+{
+    if (list_find(l, data, cmp_fn) != NULL)
+        return -1;
     return list_insert(l, data);
 }
 
 // Execute a function for each item in the list
-void list_fn(struct list *l, void (*fn)(const void *, int, int)) {
+void list_fn(struct list *l, void (*fn)(const void *, int, int))
+{
     int index = 0;
     struct list_item *i;
-    for (i = l->first; i != NULL; i = i->next) {
+    for (i = l->first; i != NULL; i = i->next)
+    {
         fn(i->data, index, l->count);
         index++;
     }

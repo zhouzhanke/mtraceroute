@@ -49,3 +49,20 @@ mtraceroute ADDRESS [-c command] [-w wait] [-z send-wait]
 ## Contributing
 
 Please check https://github.com/TopologyMapping/mtraceroute/issues
+
+# Notice
+mt.c is 程序入口
+目前项目计划中有三大功能，分别是
+
+    1 - ping
+    2 - MDA
+    3 - paris-traceroute
+
+目前主要问题
+
+    1 - 命名混乱，不要以常人的理解去阅读代码，会造成误导效果。
+    2 - 作者是git初学者，不会分支控制，也没有tag，所以代码中出现没有用（或者目前没有用,但是未来可能有用）的内容是很正常的。
+    3 - paris-traceroute问题
+        3.1 - 同时探测多个跳数，但不对回收过程进行控制，导致回收是无序的。
+        3.2 - 输出时因为回收过程是无序的，所以输出是无序的，并且如果提前找到最后一跳，就会忽略部分结果。
+        3.3 - 时间计算部分是在sleep后所以结构上是错误的，但是因为sleep永远不会触发，所以结果是正确的。

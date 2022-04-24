@@ -33,76 +33,110 @@
 
 typedef int (*parse_fn)(char *, int *);
 
-struct xoption {
+struct xoption
+{
     struct option o;
     parse_fn fn;
     void *d;
 };
 
-struct xoption *get_xoption(struct xoption *opts, char n) {
+struct xoption *get_xoption(struct xoption *opts, char n)
+{
     int t = 0;
-    while (opts[t].o.name != NULL) {
-        if (opts[t].o.val == n) return &opts[t];
+    while (opts[t].o.name != NULL)
+    {
+        if (opts[t].o.val == n)
+            return &opts[t];
         t++;
     }
     return NULL;
 }
 
-int parse_cmd(char *s, int *r) {
-    if (strcmp(s, "traceroute") == 0) *r = CMD_TRACEROUTE;
-    else if (strcmp(s, "ping") == 0)  *r = CMD_PING;
-    else if (strcmp(s, "mda") == 0)   *r = CMD_MDA;
-    else return -1;
+int parse_cmd(char *s, int *r)
+{
+    if (strcmp(s, "traceroute") == 0)
+        *r = CMD_TRACEROUTE;
+    else if (strcmp(s, "ping") == 0)
+        *r = CMD_PING;
+    else if (strcmp(s, "mda") == 0)
+        *r = CMD_MDA;
+    else
+        return -1;
     return 0;
 }
 
-int parse_method(char *s, int *r) {
-    if (strcmp(s, "icmp") == 0)     *r = METHOD_ICMP;
-    else if (strcmp(s, "udp") == 0) *r = METHOD_UDP;
-    else if (strcmp(s, "tcp") == 0) *r = METHOD_TCP;
-    else return -1;
+int parse_method(char *s, int *r)
+{
+    if (strcmp(s, "icmp") == 0)
+        *r = METHOD_ICMP;
+    else if (strcmp(s, "udp") == 0)
+        *r = METHOD_UDP;
+    else if (strcmp(s, "tcp") == 0)
+        *r = METHOD_TCP;
+    else
+        return -1;
     return 0;
 }
 
-int parse_flow_id(char *s, int *r) {
-    if (strcmp(s, "icmp-chk") == 0)       *r = FLOW_ICMP_CHK;
-    else if (strcmp(s, "icmp-dst") == 0)  *r = FLOW_ICMP_DST;
-    else if (strcmp(s, "icmp-fl") == 0)   *r = FLOW_ICMP_FL;
-    else if (strcmp(s, "icmp-tc") == 0)   *r = FLOW_ICMP_TC;
-    else if (strcmp(s, "udp-sport") == 0) *r = FLOW_UDP_SPORT;
-    else if (strcmp(s, "udp-dst") == 0)   *r = FLOW_UDP_DST;
-    else if (strcmp(s, "udp-fl") == 0)    *r = FLOW_UDP_FL;
-    else if (strcmp(s, "udp-tc") == 0)    *r = FLOW_UDP_TC;
-    else if (strcmp(s, "tcp-sport") == 0) *r = FLOW_TCP_SPORT;
-    else if (strcmp(s, "tcp-dst") == 0)   *r = FLOW_TCP_DST;
-    else if (strcmp(s, "tcp-fl") == 0)    *r = FLOW_TCP_FL;
-    else if (strcmp(s, "tcp-tc") == 0)    *r = FLOW_TCP_TC;
-    else return -1;
+int parse_flow_id(char *s, int *r)
+{
+    if (strcmp(s, "icmp-chk") == 0)
+        *r = FLOW_ICMP_CHK;
+    else if (strcmp(s, "icmp-dst") == 0)
+        *r = FLOW_ICMP_DST;
+    else if (strcmp(s, "icmp-fl") == 0)
+        *r = FLOW_ICMP_FL;
+    else if (strcmp(s, "icmp-tc") == 0)
+        *r = FLOW_ICMP_TC;
+    else if (strcmp(s, "udp-sport") == 0)
+        *r = FLOW_UDP_SPORT;
+    else if (strcmp(s, "udp-dst") == 0)
+        *r = FLOW_UDP_DST;
+    else if (strcmp(s, "udp-fl") == 0)
+        *r = FLOW_UDP_FL;
+    else if (strcmp(s, "udp-tc") == 0)
+        *r = FLOW_UDP_TC;
+    else if (strcmp(s, "tcp-sport") == 0)
+        *r = FLOW_TCP_SPORT;
+    else if (strcmp(s, "tcp-dst") == 0)
+        *r = FLOW_TCP_DST;
+    else if (strcmp(s, "tcp-fl") == 0)
+        *r = FLOW_TCP_FL;
+    else if (strcmp(s, "tcp-tc") == 0)
+        *r = FLOW_TCP_TC;
+    else
+        return -1;
     return 0;
 }
 
-int parse_conf(char *s, int *r) {
+int parse_conf(char *s, int *r)
+{
     *r = atoi(s);
-    if (*r == 90 || *r == 95 || *r == 99) return 0;
+    if (*r == 90 || *r == 95 || *r == 99)
+        return 0;
     return -1;
 }
 
-int parse_int(char *s, int *r) {
+int parse_int(char *s, int *r)
+{
     *r = atoi(s);
     return 0;
 }
 
-int parse_args(int argc, char **argv, struct args *args, struct xoption *opts) {
+int parse_args(int argc, char **argv, struct args *args, struct xoption *opts)
+{
 
     // Count the number of options
     int t = 0;
-    while (opts[t].o.name != NULL) t++;
+    while (opts[t].o.name != NULL)
+        t++;
     t++;
 
     // Create struct option
     struct option *long_opts = malloc(t * sizeof(*long_opts));
     int i = 0;
-    for (i = 0; i < t; i++) {
+    for (i = 0; i < t; i++)
+    {
         long_opts[i] = opts[i].o;
     }
 
@@ -110,32 +144,43 @@ int parse_args(int argc, char **argv, struct args *args, struct xoption *opts) {
     char short_opts[256];
     memset(short_opts, 0, 256);
     int str_pos = 0;
-    for (i = 0; i < t; i++) {
+    for (i = 0; i < t; i++)
+    {
         short_opts[str_pos] = opts[i].o.val;
         str_pos++;
-        if (opts[i].o.has_arg == required_argument) {
+        if (opts[i].o.has_arg == required_argument)
+        {
             short_opts[str_pos] = ':';
             str_pos++;
         }
-        else if (opts[i].o.has_arg == optional_argument) {
+        else if (opts[i].o.has_arg == optional_argument)
+        {
             short_opts[str_pos] = ':';
-            short_opts[str_pos+1] = ':';
+            short_opts[str_pos + 1] = ':';
             str_pos += 2;
         }
     }
- 
-    while (1) {
+
+    while (1)
+    {
         int next = getopt_long(argc, argv, short_opts, long_opts, NULL);
-        if (next == -1 || next == '?') break;
+        if (next == -1 || next == '?')
+            break;
         struct xoption *o = get_xoption(opts, next);
-        if (o != NULL) {
-            if (o->o.has_arg == no_argument) {
-                if (o->fn(NULL, NULL) == -1) {
+        if (o != NULL)
+        {
+            if (o->o.has_arg == no_argument)
+            {
+                if (o->fn(NULL, NULL) == -1)
+                {
                     free(long_opts);
                     return 1;
                 }
-            } else if (o->o.has_arg == required_argument) {
-                if (o->fn(optarg, o->d) == -1) {
+            }
+            else if (o->o.has_arg == required_argument)
+            {
+                if (o->fn(optarg, o->d) == -1)
+                {
                     printf("Wrong value for argument '%c'\n", next);
                     free(long_opts);
                     return 1;
@@ -146,9 +191,12 @@ int parse_args(int argc, char **argv, struct args *args, struct xoption *opts) {
 
     free(long_opts);
 
-    if (optind == (argc-1)) {
+    if (optind == (argc - 1))
+    {
         strcpy(args->dst, argv[optind]);
-    } else {
+    }
+    else
+    {
         printf("No destination address specified.\n");
         return 1;
     }
@@ -156,44 +204,47 @@ int parse_args(int argc, char **argv, struct args *args, struct xoption *opts) {
     return 0;
 }
 
-int show_usage() {
+int show_usage()
+{
     printf(
-"mtraceroute ADDRESS [-c command] [-w wait] [-z send-wait]\n"
-"\n"
-"  -c command: traceroute|ping|mda, default: traceroute\n"
-"  -r number of retries: default: 2\n"
-"  -w seconds to wait for answer: default: 1\n"
-"  -z milliseconds to wait between sends: default: 20\n"
-"\n"
-"  MDA: -c mda [-a confidence] [-f flow-id] [-t max-ttl]\n"
-"\n"
-"    -a confidence level in %%: 90|95|99, default: 95\n"
-"    -f what flow identifier to use, some values depends on\n"
-"       the type of the address\n"
-"       IPv4: icmp-chk, icmp-dst, udp-sport, udp-dst, tcp-sport, tcp-dst\n"
-"             Default: udp-sport\n"
-"       IPv6: icmp-chk, icmp-dst, icmp-fl, icmp-tc, udp-sport, udp-dst,\n"
-"             udp-fl, udp-tc, tcp-sport, tcp-dst, tcp-fl, tcp-tc\n"
-"             Default: udp-sport\n"
-"    -t max number of hops to probe: default: 30\n"
-"\n"
-"  TRACEROUTE: -c traceroute [-t max-ttl] [-m method] [-p probes-at-once]\n"
-"\n"
-"    -t max number of hops to probe: default: 30\n"
-"    -m method of probing: icmp|udp|tcp, default: icmp\n"
-"    -p number of probes to send at once: default: 3\n"
-"\n"
-"  PING: -c ping [-n send-probes]\n"
-"\n"
-"    -n number of probes to send: default: 5\n");
+        "mtraceroute ADDRESS [-c command] [-w wait] [-z send-wait]\n"
+        "\n"
+        "  -c command: traceroute|ping|mda, default: traceroute\n"
+        "  -r number of retries: default: 2\n"
+        "  -w seconds to wait for answer: default: 1\n"
+        "  -z milliseconds to wait between sends: default: 20\n"
+        "\n"
+        "  MDA: -c mda [-a confidence] [-f flow-id] [-t max-ttl]\n"
+        "\n"
+        "    -a confidence level in %%: 90|95|99, default: 95\n"
+        "    -f what flow identifier to use, some values depends on\n"
+        "       the type of the address\n"
+        "       IPv4: icmp-chk, icmp-dst, udp-sport, udp-dst, tcp-sport, tcp-dst\n"
+        "             Default: udp-sport\n"
+        "       IPv6: icmp-chk, icmp-dst, icmp-fl, icmp-tc, udp-sport, udp-dst,\n"
+        "             udp-fl, udp-tc, tcp-sport, tcp-dst, tcp-fl, tcp-tc\n"
+        "             Default: udp-sport\n"
+        "    -t max number of hops to probe: default: 30\n"
+        "\n"
+        "  TRACEROUTE: -c traceroute [-t max-ttl] [-m method] [-p probes-at-once]\n"
+        "\n"
+        "    -t max number of hops to probe: default: 30\n"
+        "    -m method of probing: icmp|udp|tcp, default: icmp\n"
+        "    -p number of probes to send at once: default: 3\n"
+        "\n"
+        "  PING: -c ping [-n send-probes]\n"
+        "\n"
+        "    -n number of probes to send: default: 5\n");
 
     return -1;
 }
 
-struct args *get_args(int argc, char **argv) {
+struct args *get_args(int argc, char **argv)
+{
     struct args *args = malloc(sizeof(*args));
     memset(args, 0, sizeof(*args));
 
+    // 加载默认参数
     args->a = 95;
     args->c = CMD_TRACEROUTE;
     args->f = FLOW_UDP_SPORT;
@@ -205,22 +256,23 @@ struct args *get_args(int argc, char **argv) {
     args->w = 5;
     args->z = 20;
 
+    // 尝试读取用户定义参数
     struct xoption opts[] = {
-        {{"help",           no_argument,       NULL, 'h'}, show_usage,    NULL},
-        {{"confidence",     required_argument, NULL, 'a'}, parse_conf,    &args->a},
-        {{"command",        required_argument, NULL, 'c'}, parse_cmd,     &args->c},
-        {{"flow-id",        required_argument, NULL, 'f'}, parse_flow_id, &args->f},
-        {{"max-ttl",        required_argument, NULL, 't'}, parse_int,     &args->t},
-        {{"method",         required_argument, NULL, 'm'}, parse_method,  &args->m},
-        {{"send-probes",    required_argument, NULL, 'n'}, parse_int,     &args->n},
-        {{"probes-at-once", required_argument, NULL, 'p'}, parse_int,     &args->p},
-        {{"retries",        required_argument, NULL, 'r'}, parse_int,     &args->r},
-        {{"wait",           required_argument, NULL, 'w'}, parse_int,     &args->w},
-        {{"send-wait",      required_argument, NULL, 'z'}, parse_int,     &args->z},
-        {{NULL,             no_argument,       NULL,  0 }, NULL,          NULL}
-    };
+        {{"help", no_argument, NULL, 'h'}, show_usage, NULL},
+        {{"confidence", required_argument, NULL, 'a'}, parse_conf, &args->a},
+        {{"command", required_argument, NULL, 'c'}, parse_cmd, &args->c},
+        {{"flow-id", required_argument, NULL, 'f'}, parse_flow_id, &args->f},
+        {{"max-ttl", required_argument, NULL, 't'}, parse_int, &args->t},
+        {{"method", required_argument, NULL, 'm'}, parse_method, &args->m},
+        {{"send-probes", required_argument, NULL, 'n'}, parse_int, &args->n},
+        {{"probes-at-once", required_argument, NULL, 'p'}, parse_int, &args->p},
+        {{"retries", required_argument, NULL, 'r'}, parse_int, &args->r},
+        {{"wait", required_argument, NULL, 'w'}, parse_int, &args->w},
+        {{"send-wait", required_argument, NULL, 'z'}, parse_int, &args->z},
+        {{NULL, no_argument, NULL, 0}, NULL, NULL}};
 
-    if (parse_args(argc, argv, args, opts) == 1) {
+    if (parse_args(argc, argv, args, opts) == 1)
+    {
         free(args);
         return NULL;
     }

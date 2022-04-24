@@ -36,7 +36,8 @@
 int pdu_ipv4(struct packet *p, uint8_t ihl, uint8_t tos,
              uint16_t length, uint16_t id, uint16_t flags_offset,
              uint8_t ttl, uint8_t protocol, uint16_t checksum,
-             const uint8_t *src_addr, const uint8_t *dst_addr) {
+             const uint8_t *src_addr, const uint8_t *dst_addr)
+{
 
     uint8_t version = 4; // IPv4
 
@@ -46,16 +47,18 @@ int pdu_ipv4(struct packet *p, uint8_t ihl, uint8_t tos,
     memset(&hdr, 0, IPV4_H_SIZE);
 
     hdr.version_ihl = (version << 4) | ihl;
-    hdr.tos         = tos;
-    hdr.length      = htons(length);
-    hdr.id          = htons(id);
-    hdr.flags_off   = htons(flags_offset);
-    hdr.ttl         = ttl;
-    hdr.protocol    = protocol;
-    hdr.checksum    = checksum;
+    hdr.tos = tos;
+    hdr.length = htons(length);
+    hdr.id = htons(id);
+    hdr.flags_off = htons(flags_offset);
+    hdr.ttl = ttl;
+    hdr.protocol = protocol;
+    hdr.checksum = checksum;
 
-    if (src_addr != NULL) memcpy(&(hdr.src_addr), src_addr, 4);
-    if (dst_addr != NULL) memcpy(&(hdr.dst_addr), dst_addr, 4);
+    if (src_addr != NULL)
+        memcpy(&(hdr.src_addr), src_addr, 4);
+    if (dst_addr != NULL)
+        memcpy(&(hdr.dst_addr), dst_addr, 4);
 
     uint8_t tag = packet_block_append(p, PACKET_BLOCK_IPV4, &hdr,
                                       IPV4_H_SIZE);
@@ -63,9 +66,11 @@ int pdu_ipv4(struct packet *p, uint8_t ihl, uint8_t tos,
     return tag;
 }
 
-int pdu_ipv4_checksum(struct packet *p, int tag) {
+int pdu_ipv4_checksum(struct packet *p, int tag)
+{
     struct packet_block *b = packet_block_get(p, tag);
-    if (b == NULL || b->type != PACKET_BLOCK_IPV4) return -1;
+    if (b == NULL || b->type != PACKET_BLOCK_IPV4)
+        return -1;
 
     struct ipv4_hdr *hdr = (struct ipv4_hdr *)&p->buf[b->position];
 
@@ -76,9 +81,11 @@ int pdu_ipv4_checksum(struct packet *p, int tag) {
     return 0;
 }
 
-int pdu_ipv4_length(struct packet *p, int tag) {
+int pdu_ipv4_length(struct packet *p, int tag)
+{
     struct packet_block *b = packet_block_get(p, tag);
-    if (b == NULL || b->type != PACKET_BLOCK_IPV4) return -1;
+    if (b == NULL || b->type != PACKET_BLOCK_IPV4)
+        return -1;
 
     struct ipv4_hdr *hdr = (struct ipv4_hdr *)&p->buf[b->position];
     hdr->length = htons(p->length - b->position);
@@ -87,7 +94,8 @@ int pdu_ipv4_length(struct packet *p, int tag) {
 }
 
 struct ipv4_ph *pdu_ipv4_ph(uint32_t src_addr, uint32_t dst_addr,
-                            uint8_t protocol, uint16_t length) {
+                            uint8_t protocol, uint16_t length)
+{
     struct ipv4_ph *ph = malloc(sizeof(*ph));
     memset(ph, 0, sizeof(*ph));
     ph->src_addr = src_addr;

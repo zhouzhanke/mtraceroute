@@ -29,27 +29,28 @@
 #include <getopt.h>
 
 #define CMD_TRACEROUTE 1
-#define CMD_PING       2
-#define CMD_MDA        3
+#define CMD_PING 2
+#define CMD_MDA 3
 
-#define METHOD_ICMP    1
-#define METHOD_UDP     2
-#define METHOD_TCP     3
+#define METHOD_ICMP 1
+#define METHOD_UDP 2
+#define METHOD_TCP 3
 
-#define FLOW_ICMP_CHK  1  // icmp-chk
-#define FLOW_ICMP_DST  2  // icmp-dst
-#define FLOW_ICMP_FL   3  // icmp-fl
-#define FLOW_ICMP_TC   4  // icmp-tc
-#define FLOW_UDP_SPORT 5  // udp-sport
-#define FLOW_UDP_DST   6  // udp-dst
-#define FLOW_UDP_FL    7  // udp-fl
-#define FLOW_UDP_TC    8  // udp-tc
-#define FLOW_TCP_SPORT 9  // tcp-sport
-#define FLOW_TCP_DST   10 // tcp-dst
-#define FLOW_TCP_FL    11 // tcp-fl
-#define FLOW_TCP_TC    12 // tcp-tc
+#define FLOW_ICMP_CHK 1  // icmp-chk
+#define FLOW_ICMP_DST 2  // icmp-dst
+#define FLOW_ICMP_FL 3   // icmp-fl
+#define FLOW_ICMP_TC 4   // icmp-tc
+#define FLOW_UDP_SPORT 5 // udp-sport
+#define FLOW_UDP_DST 6   // udp-dst
+#define FLOW_UDP_FL 7    // udp-fl
+#define FLOW_UDP_TC 8    // udp-tc
+#define FLOW_TCP_SPORT 9 // tcp-sport
+#define FLOW_TCP_DST 10  // tcp-dst
+#define FLOW_TCP_FL 11   // tcp-fl
+#define FLOW_TCP_TC 12   // tcp-tc
 
-struct args {
+struct args
+{
     char dst[128];
     int a; // confidence
     int c; // command

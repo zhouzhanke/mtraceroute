@@ -35,15 +35,18 @@
 
 #include "link.h"
 
-struct link *link_open(int if_index) {
+struct link *link_open(int if_index)
+{
     struct link *l = malloc(sizeof(*l));
-    if (l == NULL) return NULL;
+    if (l == NULL)
+        return NULL;
     memset(l, 0, sizeof(*l));
 
     l->if_index = if_index;
     l->fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 
-    if (l->fd == -1) {
+    if (l->fd == -1)
+    {
         free(l);
         return NULL;
     }
@@ -51,15 +54,19 @@ struct link *link_open(int if_index) {
     return l;
 }
 
-void link_close(struct link *l) {
-    if (l == NULL) return;
+void link_close(struct link *l)
+{
+    if (l == NULL)
+        return;
     close(l->fd);
     free(l);
 }
 
-int link_write(struct link *l, uint8_t *buf, uint32_t len, struct timespec *t) {
-    if (l == NULL) return -1;
-    
+int link_write(struct link *l, uint8_t *buf, uint32_t len, struct timespec *t)
+{
+    if (l == NULL)
+        return -1;
+
     // To correct an annoying error in Valgrind
     // Looks like it is because of alignment of sockaddr_ll
     struct sockaddr_storage addr;
@@ -67,16 +74,18 @@ int link_write(struct link *l, uint8_t *buf, uint32_t len, struct timespec *t) {
 
     memset(addr_ll, 0, sizeof(addr));
 
-    addr_ll->sll_family   = AF_PACKET;
-    addr_ll->sll_ifindex  = l->if_index;
+    addr_ll->sll_family = AF_PACKET;
+    addr_ll->sll_ifindex = l->if_index;
     addr_ll->sll_protocol = htons(ETH_P_ALL);
 
-    if (t != NULL) clock_gettime(CLOCK_REALTIME, t);
+    if (t != NULL)
+        clock_gettime(CLOCK_REALTIME, t);
 
     int sent = sendto(l->fd, buf, len, 0, (struct sockaddr *)addr_ll,
                       sizeof(struct sockaddr_ll));
 
-    if (sent > 0) {
+    if (sent > 0)
+    {
         l->write_count++;
         l->write_bytes += sent;
     }

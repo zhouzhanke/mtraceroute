@@ -34,7 +34,8 @@
 
 typedef int (*match_fn)(const uint8_t *, uint32_t, const uint8_t *, uint32_t);
 
-struct probe {
+struct probe
+{
     int if_index;
     int retries;
     struct timespec sent_time;

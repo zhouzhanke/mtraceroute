@@ -32,22 +32,26 @@
 #include "iface.h"
 #include "dst.h"
 
-struct dst *dst_create(struct mt *a, struct addr *ip_dst) {
+struct dst *dst_create(struct mt *a, struct addr *ip_dst)
+{
 
     struct dst *d = malloc(sizeof(*d));
-    if (d == NULL) return NULL;
+    if (d == NULL)
+        return NULL;
     memset(d, 0, sizeof(*d));
 
     struct route *r = mt_get_route(a, ip_dst);
 
-    if (r == NULL) {
+    if (r == NULL)
+    {
         free(d);
         return NULL;
     }
 
     struct neighbor *n = mt_get_neighbor(a, r->gateway, r->if_index);
 
-    if (n == NULL) {
+    if (n == NULL)
+    {
         printf("mt_get_neighbor failed\n");
         free(d);
         return NULL;
@@ -55,44 +59,43 @@ struct dst *dst_create(struct mt *a, struct addr *ip_dst) {
 
     struct interface *i = mt_get_interface(a, r->if_index);
 
-    if (i == NULL) {
+    if (i == NULL)
+    {
         printf("mt_get_interface failed\n");
         free(d);
         return NULL;
     }
 
     struct addr *if_ip = NULL;
-    if (ip_dst->type == ADDR_IPV4) {
-        if_ip  = iface_ip_addr(r->if_index, ADDR_IPV4);
-    } else if (ip_dst->type == ADDR_IPV6) {
-        if_ip  = iface_ip_addr(r->if_index, ADDR_IPV6);
+    if (ip_dst->type == ADDR_IPV4)
+    {
+        if_ip = iface_ip_addr(r->if_index, ADDR_IPV4);
+    }
+    else if (ip_dst->type == ADDR_IPV6)
+    {
+        if_ip = iface_ip_addr(r->if_index, ADDR_IPV6);
     }
 
-    d->ip_dst   = ip_dst;
-    d->ip_src   = if_ip;
-    d->mac_dst  = n->hw_addr;
-    d->mac_src  = i->hw_addr;
+    d->ip_dst = ip_dst;
+    d->ip_src = if_ip;
+    d->mac_dst = n->hw_addr;
+    d->mac_src = i->hw_addr;
     d->if_index = r->if_index;
 
     return d;
 }
 
-struct dst *dst_create_from_str(struct mt *a, const char *addr_str) {
-    // try to guess the type of the addr
-    int type = addr_guess_type(addr_str);
-    if (type != ADDR_IPV4 && type != ADDR_IPV6) return NULL;
-
-    struct addr *addr = addr_create_from_str(type, addr_str);
-
-    struct dst *dst = dst_create(a, addr);
-    if (dst == NULL) {
-        addr_destroy(addr);
-    }
-
-    return dst;
+struct dst *dst = dst_create(a, addr);
+if (dst == NULL)
+{
+    addr_destroy(addr);
 }
 
-void dst_destroy(struct dst *d) {
+return dst;
+}
+
+void dst_destroy(struct dst *d)
+{
     addr_destroy(d->ip_dst);
     addr_destroy(d->ip_src);
     free(d);

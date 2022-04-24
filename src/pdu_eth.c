@@ -32,15 +32,18 @@
 #include "pdu_eth.h"
 
 int pdu_eth(struct packet *p, const uint8_t *dst_addr,
-            const uint8_t *src_addr, uint16_t type) {
+            const uint8_t *src_addr, uint16_t type)
+{
 
     struct eth_hdr hdr;
     memset(&hdr, 0, ETH_H_SIZE);
 
     // Allow dst_addr and src_addr == NULL
-    if (dst_addr != NULL) memcpy(hdr.dst_addr, dst_addr, ETH_ADDR_LEN);
-    if (src_addr != NULL) memcpy(hdr.src_addr, src_addr, ETH_ADDR_LEN);
-    
+    if (dst_addr != NULL)
+        memcpy(hdr.dst_addr, dst_addr, ETH_ADDR_LEN);
+    if (src_addr != NULL)
+        memcpy(hdr.src_addr, src_addr, ETH_ADDR_LEN);
+
     hdr.type = htons(type);
 
     uint8_t tag = packet_block_append(p, PACKET_BLOCK_ETHERNET, &hdr,
@@ -49,24 +52,28 @@ int pdu_eth(struct packet *p, const uint8_t *dst_addr,
     return tag;
 }
 
-int pdu_eth_arp(struct packet *p, const uint8_t *src_addr) {
+int pdu_eth_arp(struct packet *p, const uint8_t *src_addr)
+{
     uint8_t broadcast[ETH_ADDR_LEN];
     memset(broadcast, 0xff, ETH_ADDR_LEN);
     return pdu_eth(p, broadcast, src_addr, ETH_TYPE_ARP);
 }
 
 int pdu_eth_ipv4(struct packet *p, const uint8_t *dst_addr,
-                    const uint8_t *src_addr) {
+                 const uint8_t *src_addr)
+{
     return pdu_eth(p, dst_addr, src_addr, ETH_TYPE_IPV4);
 }
 
 int pdu_eth_ipv6(struct packet *p, const uint8_t *dst_addr,
-                 const uint8_t *src_addr) {
+                 const uint8_t *src_addr)
+{
     return pdu_eth(p, dst_addr, src_addr, ETH_TYPE_IPV6);
 }
 
 int pdu_eth_ipv6_mcast(struct packet *p, const uint8_t *dst,
-                       const uint8_t *src) {
+                       const uint8_t *src)
+{
     uint8_t dst_addr[ETH_ADDR_LEN];
     dst_addr[0] = 0x33;
     dst_addr[1] = 0x33;

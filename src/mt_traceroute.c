@@ -50,15 +50,17 @@
 #include "buffer.h"
 #include "mt_traceroute.h"
 
-#define IP_ID     54321
-#define CHECKSUM  54321
-#define ICMP_ID   54321
-#define DPORT     33435
-#define SPORT     43435
+#define IP_ID 54321
+#define CHECKSUM 54321
+#define ICMP_ID 54321
+#define DPORT 33435
+#define SPORT 43435
 #define TCP_DPORT 80
 
-static void traceroute4_print(const struct probe *p) {
-    if (p->response_len == 0) {
+static void traceroute4_print(const struct probe *p)
+{
+    if (p->response_len == 0)
+    {
         printf("*\n");
         return;
     }
@@ -71,8 +73,10 @@ static void traceroute4_print(const struct probe *p) {
     free(time);
 }
 
-static void traceroute6_print(const struct probe *p) {
-    if (p->response_len == 0) {
+static void traceroute6_print(const struct probe *p)
+{
+    if (p->response_len == 0)
+    {
         printf("*\n");
         return;
     }
@@ -86,84 +90,121 @@ static void traceroute6_print(const struct probe *p) {
 }
 
 static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
-                      int max_ttl, int at_once) {
+                      int max_ttl, int at_once)
+{
     int ttl = 1;
 
-    while (ttl <= max_ttl) {
+    while (ttl <= max_ttl)
+    {
         int pn = 0;
-        for (pn = 0; pn < at_once && ttl <= max_ttl; pn++, ttl++) {
 
+        // 循环发送探针->回收探针->输出结果
+        for (pn = 0; pn < at_once && ttl <= max_ttl; pn++, ttl++) // at once 意思是同时探测3跳
+        {
+
+            // 创建空数据包
             struct packet *p = NULL;
 
-            if (dst->ip_dst->type == ADDR_IPV4) {
-                if (probe_type == METHOD_ICMP) {
+            if (dst->ip_dst->type == ADDR_IPV4)
+            {
+                if (probe_type == METHOD_ICMP)
+                {
+                    // 生成数据包
                     p = packet_helper_echo4(dst->mac_dst->addr, dst->mac_src->addr,
-                                        dst->ip_src->addr, dst->ip_dst->addr, ttl,
-                                        IP_ID + ttl, ICMP_ID, ttl, CHECKSUM);
+                                            dst->ip_src->addr, dst->ip_dst->addr, ttl,
+                                            IP_ID + ttl, ICMP_ID, ttl, CHECKSUM);
+                    // 发送数据
                     mt_send(a, dst->if_index, p->buf, p->length, &match_icmp4);
-                } else if (probe_type == METHOD_UDP) {
+                }
+                else if (probe_type == METHOD_UDP)
+                {
                     p = packet_helper_udp4(dst->mac_dst->addr, dst->mac_src->addr,
-                                       dst->ip_src->addr, dst->ip_dst->addr, ttl,
-                                       IP_ID + ttl, SPORT, DPORT, ttl);
+                                           dst->ip_src->addr, dst->ip_dst->addr, ttl,
+                                           IP_ID + ttl, SPORT, DPORT, ttl);
                     mt_send(a, dst->if_index, p->buf, p->length, &match_udp4);
-                } else if (probe_type == METHOD_TCP) {
+                }
+                else if (probe_type == METHOD_TCP)
+                {
                     p = packet_helper_tcp4(dst->mac_dst->addr, dst->mac_src->addr,
-                                       dst->ip_src->addr, dst->ip_dst->addr, ttl,
-                                       IP_ID + ttl, SPORT, TCP_DPORT, ttl);
+                                           dst->ip_src->addr, dst->ip_dst->addr, ttl,
+                                           IP_ID + ttl, SPORT, TCP_DPORT, ttl);
                     mt_send(a, dst->if_index, p->buf, p->length, &match_tcp4);
                 }
-            } else if (dst->ip_dst->type == ADDR_IPV6) {
-                if (probe_type == METHOD_ICMP) {
+            }
+            else if (dst->ip_dst->type == ADDR_IPV6)
+            {
+                if (probe_type == METHOD_ICMP)
+                {
                     p = packet_helper_echo6(dst->mac_dst->addr, dst->mac_src->addr,
                                             dst->ip_src->addr, dst->ip_dst->addr,
                                             0, 0, ttl, ICMP_ID, ttl, CHECKSUM);
                     mt_send(a, dst->if_index, p->buf, p->length, &match_icmp6);
-                } else if (probe_type == METHOD_UDP) {
+                }
+                else if (probe_type == METHOD_UDP)
+                {
                     p = packet_helper_udp6(dst->mac_dst->addr, dst->mac_src->addr,
                                            dst->ip_src->addr, dst->ip_dst->addr, 0, 0, ttl,
                                            SPORT, DPORT, ttl);
                     mt_send(a, dst->if_index, p->buf, p->length, &match_udp6);
-                } else if (probe_type == METHOD_TCP) {
+                }
+                else if (probe_type == METHOD_TCP)
+                {
                     p = packet_helper_tcp6(dst->mac_dst->addr, dst->mac_src->addr,
                                            dst->ip_src->addr, dst->ip_dst->addr, 0, 0, ttl,
                                            SPORT, TCP_DPORT, ttl);
-                    mt_send(a, dst->if_index, p->buf, p->length, &match_tcp6);                    
+                    mt_send(a, dst->if_index, p->buf, p->length, &match_tcp6);
                 }
             }
 
             packet_destroy(p);
         }
 
+        // 等待并回收探针，如果失败就重发直到到达设定重发次数。
+        // 多个探针共用一个通道，回收也没有做对比，所以是无序的
         mt_wait(a, dst->if_index);
 
+        // 获取回收到的探针
         struct interface *i = mt_get_interface(a, dst->if_index);
         int finished = 0;
+        bool flag = false;
         struct list *it = i->probes;
-        while (i->probes->count > 0) {
+
+        // 输出探测结果
+        // 特殊情况下会忽略部分结果
+        while (i->probes->count > 0)
+        {
             struct probe *probe = (struct probe *)list_pop(i->probes);
 
-            if (finished == 0) {
-                if (dst->ip_dst->type == ADDR_IPV4) {
+            if (finished == 0)
+            {
+                if (dst->ip_dst->type == ADDR_IPV4)
+                {
                     traceroute4_print(probe);
 
-                    if (probe->response_len > 0) {
+                    if (probe->response_len > 0)
+                    {
                         char *raddr = get_ip4_src_addr(probe->response);
                         char *dst_addr = get_ip4_dst_addr(probe->probe);
                         if (get_icmp4_type(probe->response) == ICMPV4_TYPE_UNREACH ||
-                            strcmp(raddr, dst_addr) == 0) {
+                            strcmp(raddr, dst_addr) == 0)
+                        {
                             finished = 1;
                         }
                         free(raddr);
                         free(dst_addr);
                     }
-                } else if (dst->ip_dst->type == ADDR_IPV6) {
+                }
+                else if (dst->ip_dst->type == ADDR_IPV6)
+                {
                     traceroute6_print(probe);
 
-                    if (probe->response_len > 0) {
+                    if (probe->response_len > 0)
+                    {
                         char *raddr = get_ip6_src_addr(probe->response);
                         char *dst_addr = get_ip6_dst_addr(probe->probe);
                         if (get_icmp6_type(probe->response) == ICMPV6_TYPE_UNREACH ||
-                            strcmp(raddr, dst_addr) == 0) {
+                            strcmp(raddr, dst_addr) == 0)
+                        {
                             finished = 1;
                         }
                         free(raddr);
@@ -173,16 +214,18 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
             }
 
             probe_destroy(probe);
-            
         }
-        if (finished) break;
+        if (finished)
+            break;
     }
 }
 
 int mt_traceroute(struct mt *a, const struct dst *dst, int probe_type,
-                  int max_ttl, int at_once) {
+                  int max_ttl, int at_once)
+{
     if (dst->ip_dst->type != ADDR_IPV4 &&
-        dst->ip_dst->type != ADDR_IPV6) return -1;
+        dst->ip_dst->type != ADDR_IPV6)
+        return -1;
 
     return traceroute(a, dst, probe_type, max_ttl, at_once);
 }

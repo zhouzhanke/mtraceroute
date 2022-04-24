@@ -29,14 +29,17 @@
 #include <stdlib.h>
 #include "pdu_data.h"
 
-int pdu_data(struct packet *p, const uint8_t *buf, uint32_t len) {
+int pdu_data(struct packet *p, const uint8_t *buf, uint32_t len)
+{
     return packet_block_append(p, PACKET_BLOCK_DATA, buf, len);
 }
 
-int pdu_data_bytes(struct packet *p, uint32_t len) {
+int pdu_data_bytes(struct packet *p, uint32_t len)
+{
     uint8_t *buf = malloc(len);
     uint32_t i = 0;
-    for (i = 0; i < len; i++) buf[i] = i;
+    for (i = 0; i < len; i++)
+        buf[i] = i;
     int tag = pdu_data(p, buf, len);
     free(buf);
     return tag;

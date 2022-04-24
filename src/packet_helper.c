@@ -42,19 +42,22 @@
 struct packet *packet_helper_echo4(const uint8_t *eth_dst, const uint8_t *eth_src,
                                    const uint8_t *ip_src, const uint8_t *ip_dst,
                                    uint8_t ttl, uint16_t ip_id, uint16_t icmp_id,
-                                   uint16_t seq_num, uint16_t checksum) {
+                                   uint16_t seq_num, uint16_t checksum)
+{
 
+    // 初始化数据包
     struct packet *p = packet_create();
 
+    // 网卡
     uint8_t eth_tag = pdu_eth_ipv4(p, eth_dst, eth_src);
 
-    uint8_t ip_tag = pdu_ipv4(p, IPV4_IHL, 0, 0, ip_id, 0, ttl,
-                              PROTO_ICMPV4, 0, ip_src, ip_dst);
-    
+    // IP header
+    uint8_t ip_tag = pdu_ipv4(p, IPV4_IHL, 0, 0, ip_id, 0, ttl, PROTO_ICMPV4, 0, ip_src, ip_dst);
+
+    // ICMP header
     uint8_t icmp_tag = pdu_icmpv4_echo(p, 0, icmp_id, seq_num);
 
-    // Add 2 bytes data so to exchange it with
-    // the checksum to keep the flow id fixed
+    // Add 2 bytes data so to exchange it with the checksum to keep the flow id fixed
     uint16_t data = htons(checksum);
     uint8_t data_tag = pdu_data(p, (uint8_t *)&data, 2);
 
@@ -66,17 +69,18 @@ struct packet *packet_helper_echo4(const uint8_t *eth_dst, const uint8_t *eth_sr
     // Exchange the 2 bytes data with the checksum
     uint8_t *data_buf = (uint8_t *)packet_buf_get_by_tag(p, data_tag);
     struct icmpv4_hdr *icmp_buf = (struct icmpv4_hdr *)
-                                  packet_buf_get_by_tag(p, icmp_tag);
+        packet_buf_get_by_tag(p, icmp_tag);
     buff_swap(data_buf, (uint8_t *)&icmp_buf->checksum, 2);
 
-    return p;        
+    return p;
 }
 
 struct packet *packet_helper_echo6(const uint8_t *eth_dst, const uint8_t *eth_src,
                                    const uint8_t *ip_src, const uint8_t *ip_dst,
                                    uint8_t traffic_class, uint32_t flow_label,
                                    uint8_t hop_limit, uint16_t icmp_id, uint16_t seq_num,
-                                   uint16_t checksum) {
+                                   uint16_t checksum)
+{
 
     struct packet *p = packet_create();
 
@@ -99,28 +103,30 @@ struct packet *packet_helper_echo6(const uint8_t *eth_dst, const uint8_t *eth_sr
     // Exchange the 2 bytes data with the checksum
     uint8_t *data_buf = (uint8_t *)packet_buf_get_by_tag(p, data_tag);
     struct icmpv6_hdr *icmp_buf = (struct icmpv6_hdr *)
-                                  packet_buf_get_by_tag(p, icmp_tag);
+        packet_buf_get_by_tag(p, icmp_tag);
     buff_swap(data_buf, (uint8_t *)&icmp_buf->checksum, 2);
 
-    return p;        
+    return p;
 }
 
 struct packet *packet_helper_udp4(const uint8_t *eth_dst, const uint8_t *eth_src,
                                   const uint8_t *ip_src, const uint8_t *ip_dst,
                                   uint8_t ttl, uint16_t ip_id, uint16_t src_port,
-                                  uint16_t dst_port, uint16_t checksum) {
+                                  uint16_t dst_port, uint16_t checksum)
+{
 
     struct packet *p = packet_create();
 
     uint8_t eth_tag = pdu_eth_ipv4(p, eth_dst, eth_src);
 
     uint8_t ip_tag = pdu_ipv4(p, IPV4_IHL, 0, 0, ip_id, 0, ttl,
-                                PROTO_UDP, 0, ip_src, ip_dst);
+                              PROTO_UDP, 0, ip_src, ip_dst);
 
     uint8_t udp_tag = pdu_udp(p, src_port, dst_port, 0, 0);
 
     uint8_t data_tag = 0;
-    if (checksum != 0) {
+    if (checksum != 0)
+    {
         // Add 2 bytes data so to exchange it with the checksum
         uint16_t data = htons(checksum);
         data_tag = pdu_data(p, (uint8_t *)&data, 2);
@@ -131,11 +137,12 @@ struct packet *packet_helper_udp4(const uint8_t *eth_dst, const uint8_t *eth_src
     pdu_udp_length(p, udp_tag);
     pdu_udp_checksum(p, udp_tag, ip_tag);
 
-    if (checksum != 0) {
+    if (checksum != 0)
+    {
         // Exchange the 2 bytes data with the checksum
         uint8_t *data_buf = (uint8_t *)packet_buf_get_by_tag(p, data_tag);
         struct udp_hdr *udp_buf = (struct udp_hdr *)
-                                   packet_buf_get_by_tag(p, udp_tag);
+            packet_buf_get_by_tag(p, udp_tag);
         buff_swap(data_buf, (uint8_t *)&udp_buf->checksum, 2);
     }
 
@@ -146,7 +153,8 @@ struct packet *packet_helper_udp6(const uint8_t *eth_dst, const uint8_t *eth_src
                                   const uint8_t *ip_src, const uint8_t *ip_dst,
                                   uint8_t traffic_class, uint32_t flow_label,
                                   uint8_t hop_limit, uint16_t src_port,
-                                  uint16_t dst_port, uint16_t checksum) {
+                                  uint16_t dst_port, uint16_t checksum)
+{
 
     struct packet *p = packet_create();
 
@@ -157,7 +165,8 @@ struct packet *packet_helper_udp6(const uint8_t *eth_dst, const uint8_t *eth_src
     uint8_t udp_tag = pdu_udp(p, src_port, dst_port, 0, 0);
 
     uint8_t data_tag = 0;
-    if (checksum != 0) {
+    if (checksum != 0)
+    {
         // Add 2 bytes data so to exchange it with the checksum
         uint16_t data = htons(checksum);
         data_tag = pdu_data(p, (uint8_t *)&data, 2);
@@ -168,11 +177,12 @@ struct packet *packet_helper_udp6(const uint8_t *eth_dst, const uint8_t *eth_src
     pdu_udp_length(p, udp_tag);
     pdu_udp_checksum(p, udp_tag, ip_tag);
 
-    if (checksum != 0) {
+    if (checksum != 0)
+    {
         // Exchange the 2 bytes data with the checksum
         uint8_t *data_buf = (uint8_t *)packet_buf_get_by_tag(p, data_tag);
         struct udp_hdr *udp_buf = (struct udp_hdr *)
-                                   packet_buf_get_by_tag(p, udp_tag);
+            packet_buf_get_by_tag(p, udp_tag);
         buff_swap(data_buf, (uint8_t *)&udp_buf->checksum, 2);
     }
 
@@ -182,7 +192,8 @@ struct packet *packet_helper_udp6(const uint8_t *eth_dst, const uint8_t *eth_src
 struct packet *packet_helper_tcp4(const uint8_t *eth_dst, const uint8_t *eth_src,
                                   const uint8_t *ip_src, const uint8_t *ip_dst,
                                   uint8_t ttl, uint16_t ip_id, uint16_t src_port,
-                                  uint16_t dst_port, uint32_t seq_numb) {
+                                  uint16_t dst_port, uint32_t seq_numb)
+{
 
     struct packet *p = packet_create();
 
@@ -204,7 +215,8 @@ struct packet *packet_helper_tcp6(const uint8_t *eth_dst, const uint8_t *eth_src
                                   const uint8_t *ip_src, const uint8_t *ip_dst,
                                   uint8_t traffic_class, uint32_t flow_label,
                                   uint8_t hop_limit, uint16_t src_port,
-                                  uint16_t dst_port, uint32_t seq_numb) {
+                                  uint16_t dst_port, uint32_t seq_numb)
+{
 
     struct packet *p = packet_create();
 

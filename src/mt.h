@@ -39,9 +39,10 @@
 
 #define MT_PCAP_SNAPLEN 1518
 #define MT_PCAP_PROMISC 0
-#define MT_PCAP_MS      20
+#define MT_PCAP_MS 20
 
-struct mt {
+struct mt
+{
     struct list *interfaces;
     struct list *neighbors;
     struct list *routes;
@@ -57,7 +58,8 @@ struct mt {
     struct timespec last_probe_time;
 };
 
-struct interface {
+struct interface
+{
     int if_index;
     char if_name[IF_NAMESIZE];
     struct addr *hw_addr;
@@ -66,7 +68,8 @@ struct interface {
     pcap_t *pcap_handle;
 };
 
-struct neighbor {
+struct neighbor
+{
     int if_index;
     struct addr *ip_addr;
     struct addr *hw_addr;
