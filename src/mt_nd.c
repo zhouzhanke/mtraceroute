@@ -45,7 +45,8 @@
 
 static struct packet *neighbor6_packet(const uint8_t *mac_src,
                                        const uint8_t *src_addr,
-                                       const uint8_t *dst_addr) {
+                                       const uint8_t *dst_addr)
+{
 
     // Create the solicited-node multicast address (RFC 4291)
     // It take the last 24 bits of the destination address
@@ -57,7 +58,7 @@ static struct packet *neighbor6_packet(const uint8_t *mac_src,
     uint8_t eth_tag = pdu_eth_ipv6_mcast(p, mdst->addr, mac_src);
 
     uint8_t ipv6_tag = pdu_ipv6(p, 0, 0, 0, 0, IPV6_HOP_LIMIT_ND,
-                                   src_addr, mdst->addr);
+                                src_addr, mdst->addr);
 
     uint8_t icmp_tag = pdu_icmpv6_neighbor_sol(p, dst_addr, mac_src);
 
@@ -71,17 +72,20 @@ static struct packet *neighbor6_packet(const uint8_t *mac_src,
 }
 
 static int neighbor4_match(const uint8_t *probe, uint32_t probe_len,
-                           const uint8_t *resp, uint32_t resp_len) {
+                           const uint8_t *resp, uint32_t resp_len)
+{
 
     struct eth_hdr *resp_eth_hdr = (struct eth_hdr *)resp;
 
-    if (ntohs(resp_eth_hdr->type) == ETH_TYPE_ARP) {
-        
+    if (ntohs(resp_eth_hdr->type) == ETH_TYPE_ARP)
+    {
+
         struct arp_hdr *p_arp = (struct arp_hdr *)(probe + ETH_H_SIZE);
         struct arp_hdr *r_arp = (struct arp_hdr *)(resp + ETH_H_SIZE);
 
         if (buff_cmp(p_arp->sender_ip, r_arp->target_ip, 4) == 0 &&
-            buff_cmp(r_arp->sender_ip, p_arp->target_ip, 4) == 0) {
+            buff_cmp(r_arp->sender_ip, p_arp->target_ip, 4) == 0)
+        {
             return 1;
         }
     }
@@ -90,13 +94,16 @@ static int neighbor4_match(const uint8_t *probe, uint32_t probe_len,
 }
 
 static struct addr *neighbor4(struct mt *a, const struct addr *addr,
-                              int if_index) {
+                              int if_index)
+{
 
     struct addr *if_hw = iface_hw_addr(if_index);
-    if (if_hw == NULL) return NULL;
+    if (if_hw == NULL)
+        return NULL;
 
     struct addr *if_ip = iface_ip_addr(if_index, addr->type);
-    if (if_ip == NULL) {
+    if (if_ip == NULL)
+    {
         addr_destroy(if_hw);
         return NULL;
     }
@@ -112,9 +119,11 @@ static struct addr *neighbor4(struct mt *a, const struct addr *addr,
     struct addr *resp = NULL;
 
     struct interface *i = mt_get_interface(a, if_index);
-    while (i->probes->count > 0) {
+    while (i->probes->count > 0)
+    {
         struct probe *probe = (struct probe *)list_pop(i->probes);
-        if (probe->response_len > 0) {
+        if (probe->response_len > 0)
+        {
             struct arp_hdr *r_arp = (struct arp_hdr *)(probe->response + ETH_H_SIZE);
             resp = addr_create(ADDR_ETHERNET, r_arp->sender_hw);
         }
@@ -129,11 +138,13 @@ static struct addr *neighbor4(struct mt *a, const struct addr *addr,
 }
 
 static int neighbor6_match(const uint8_t *probe, uint32_t probe_len,
-                           const uint8_t *resp, uint32_t resp_len) {
+                           const uint8_t *resp, uint32_t resp_len)
+{
 
     struct eth_hdr *resp_eth_hdr = (struct eth_hdr *)resp;
 
-    if (ntohs(resp_eth_hdr->type) == ETH_TYPE_IPV6) {
+    if (ntohs(resp_eth_hdr->type) == ETH_TYPE_IPV6)
+    {
 
         uint32_t icmp_pos = ETH_H_SIZE + IPV6_H_SIZE;
         uint32_t tpos = icmp_pos + ICMPV6_H_SIZE;
@@ -144,7 +155,8 @@ static int neighbor6_match(const uint8_t *probe, uint32_t probe_len,
         uint8_t *r_targ = (uint8_t *)(resp + tpos);
 
         if (icmp_r->type == ICMPV6_TYPE_NEIGHADV &&
-            buff_cmp(p_targ, r_targ, 16) == 0) {
+            buff_cmp(p_targ, r_targ, 16) == 0)
+        {
             return 1;
         }
     }
@@ -153,13 +165,16 @@ static int neighbor6_match(const uint8_t *probe, uint32_t probe_len,
 }
 
 static struct addr *neighbor6(struct mt *a, const struct addr *addr,
-                              int if_index) {
+                              int if_index)
+{
 
     struct addr *if_hw = iface_hw_addr(if_index);
-    if (if_hw == NULL) return NULL;
+    if (if_hw == NULL)
+        return NULL;
 
     struct addr *if_ip = iface_ip_addr(if_index, addr->type);
-    if (if_ip == NULL) {
+    if (if_ip == NULL)
+    {
         addr_destroy(if_hw);
         return NULL;
     }
@@ -172,16 +187,18 @@ static struct addr *neighbor6(struct mt *a, const struct addr *addr,
     struct addr *resp = NULL;
 
     struct interface *i = mt_get_interface(a, if_index);
-    while (i->probes->count > 0) {
+    while (i->probes->count > 0)
+    {
         struct probe *probe = (struct probe *)list_pop(i->probes);
-        if (probe->response_len > 0) {
+        if (probe->response_len > 0)
+        {
 
             uint32_t icmp_opt_pos = ETH_H_SIZE + IPV6_H_SIZE +
                                     ICMPV6_H_SIZE + 16;
 
             uint8_t *icmp_opt = (uint8_t *)(probe->response + icmp_opt_pos);
 
-            resp = addr_create(ADDR_ETHERNET, icmp_opt+2);
+            resp = addr_create(ADDR_ETHERNET, icmp_opt + 2);
         }
         probe_destroy(probe);
     }
@@ -193,10 +210,14 @@ static struct addr *neighbor6(struct mt *a, const struct addr *addr,
     return resp;
 }
 
-struct addr *mt_nd(struct mt *a, const struct addr *addr, int if_index) {
-    if (addr->type == ADDR_IPV4) {
+struct addr *mt_nd(struct mt *a, const struct addr *addr, int if_index)
+{
+    if (addr->type == ADDR_IPV4)
+    {
         return neighbor4(a, addr, if_index);
-    } else if (addr->type == ADDR_IPV6) {
+    }
+    else if (addr->type == ADDR_IPV6)
+    {
         return neighbor6(a, addr, if_index);
     }
     return NULL;

@@ -94,6 +94,7 @@ static void mt_receive(struct interface *i, const uint8_t *buf,
         struct probe *p = (struct probe *)it->data;
         if (p->sent_time.tv_sec > 0 && p->response_len == 0)
         {
+            // 匹配探针
             probe_match(p, buf, len, &ts);
         }
     }
@@ -145,6 +146,7 @@ void mt_wait(struct mt *a, int if_index)
         }
         printf("done\n");
 
+        // 重发探针
     } while (mt_unanswered_probes(a, i) > 0);
 }
 
@@ -347,7 +349,7 @@ int main(int argc, char *argv[])
     printf("done\n");
 
     // 检查目标地址
-    printf("读取目标地址...");
+    printf("读取目标地址...\n");
     struct dst *d = dst_create_from_str(a, args->dst);
     if (d == NULL)
     {
@@ -361,6 +363,7 @@ int main(int argc, char *argv[])
     // 根据参数分别启动以下3种子程序
     if (args->c == CMD_PING)
     {
+        // n = ping所使用的探针数量
         mt_ping(a, d, args->n);
     }
     else if (args->c == CMD_MDA)

@@ -48,6 +48,7 @@ struct dst *dst_create(struct mt *a, struct addr *ip_dst)
         return NULL;
     }
 
+    // 尝试获取终点邻近目标？...
     struct neighbor *n = mt_get_neighbor(a, r->gateway, r->if_index);
 
     if (n == NULL)

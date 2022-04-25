@@ -749,6 +749,7 @@ static void mda_print(int ttl, char *addr, struct list *nh, int per_packet)
 
 static int mda(struct mda *mda)
 {
+    // MDA 算法结果，数量=可发现负载均衡数（目前128个，第一个不算）
     int k[][3] = {
         {0, 0, 0},
         {1, 1, 1},
@@ -882,7 +883,10 @@ static int mda(struct mda *mda)
     };
 
     // Initialize the first flows for root
+
+    // 根据设定获取率选择MDA算法表
     int n = k[2][mda->confidence];
+    // 录入算法表
     int i = 0;
     for (i = 0; i < n; i++)
     {
@@ -978,6 +982,7 @@ int mt_mda(struct mt *a, struct dst *dst, int confidence,
            int flow_type, int max_ttl)
 {
 
+    // 获取率百分比,90%，95%，99%
     if (confidence == 90)
         confidence = 0;
     else if (confidence == 95)

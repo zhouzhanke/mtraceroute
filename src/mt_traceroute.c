@@ -96,11 +96,13 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
 
     while (ttl <= max_ttl)
     {
+        printf("<<<<<新的探测循环>>>>>\n");
         int pn = 0;
 
         // 循环发送探针->回收探针->输出结果
         printf("发送探针...\n");
-        for (pn = 0; pn < at_once && ttl <= max_ttl; pn++, ttl++) // at once 意思是同时探测3跳
+        // at once 意思是同时探测n跳
+        for (pn = 0; pn < at_once && ttl <= max_ttl; pn++, ttl++)
         {
 
             // 创建空数据包
@@ -115,6 +117,7 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
                                             dst->ip_src->addr, dst->ip_dst->addr, ttl,
                                             IP_ID + ttl, ICMP_ID, ttl, CHECKSUM);
                     // 发送数据
+                    // 传入匹配函数
                     mt_send(a, dst->if_index, p->buf, p->length, &match_icmp4);
                 }
                 else if (probe_type == METHOD_UDP)
@@ -179,8 +182,10 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
             {
                 if (dst->ip_dst->type == ADDR_IPV4)
                 {
+                    // 输出结果
                     traceroute4_print(probe);
 
+                    // 到达终点提前结束程序
                     if (probe->response_len > 0)
                     {
                         char *raddr = get_ip4_src_addr(probe->response);
@@ -215,7 +220,6 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
 
             probe_destroy(probe);
         }
-        printf("结束一次循环\n");
         if (finished)
             break;
     }
