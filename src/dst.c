@@ -85,13 +85,22 @@ struct dst *dst_create(struct mt *a, struct addr *ip_dst)
     return d;
 }
 
-struct dst *dst = dst_create(a, addr);
-if (dst == NULL)
+struct dst *dst_create_from_str(struct mt *a, const char *addr_str)
 {
-    addr_destroy(addr);
-}
+    // try to guess the type of the addr
+    int type = addr_guess_type(addr_str);
+    if (type != ADDR_IPV4 && type != ADDR_IPV6)
+        return NULL;
 
-return dst;
+    struct addr *addr = addr_create_from_str(type, addr_str);
+
+    struct dst *dst = dst_create(a, addr);
+    if (dst == NULL)
+    {
+        addr_destroy(addr);
+    }
+
+    return dst;
 }
 
 void dst_destroy(struct dst *d)

@@ -165,7 +165,6 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
         // 获取回收到的探针
         struct interface *i = mt_get_interface(a, dst->if_index);
         int finished = 0;
-        bool flag = false;
         struct list *it = i->probes;
 
         // 输出探测结果
