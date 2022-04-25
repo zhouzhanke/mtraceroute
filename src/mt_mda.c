@@ -927,7 +927,6 @@ static int mda(struct mda *mda)
             int new_next_hop = 1;
             while (new_next_hop)
             {
-
                 struct list *flows = get_flows(mda, ttl, addr);
 
                 int total_next_hops = nh_list->count;

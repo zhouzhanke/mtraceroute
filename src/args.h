@@ -52,12 +52,12 @@
 struct args
 {
     char dst[128];
-    int a; // confidence
+    int confidence; // confidence
     int c; // command
-    int f; // flow-id
-    int t; // max-ttl
+    int flow_type; // flow-id
+    int max_ttl; // max-ttl
     int m; // method
-    int n; // send-probes
+    int number_of_pings; // send-probes
     int p; // probes-at-once
     int r; // retries
     int w; // wait

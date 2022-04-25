@@ -38,26 +38,32 @@
 #include "protocol_numbers.h"
 #include "buffer.h"
 
-int get_icmp4_type(const uint8_t *b) {
-    struct ipv4_hdr *rip = (struct ipv4_hdr *)(b + ETH_H_SIZE);
-    if (rip->protocol != PROTO_ICMPV4) return -1;
-    struct icmpv4_hdr *icmp = (struct icmpv4_hdr *)(b + ETH_H_SIZE + IPV4_H_SIZE);
-    return icmp->type;
+int get_icmp4_type(const uint8_t *b)
+{
+   struct ipv4_hdr *rip = (struct ipv4_hdr *)(b + ETH_H_SIZE);
+   if (rip->protocol != PROTO_ICMPV4)
+      return -1;
+   struct icmpv4_hdr *icmp = (struct icmpv4_hdr *)(b + ETH_H_SIZE + IPV4_H_SIZE);
+   return icmp->type;
 }
 
-int get_icmp4_seqnum(const uint8_t *b) {
-    struct ipv4_hdr *rip = (struct ipv4_hdr *)(b + ETH_H_SIZE);
-    if (rip->protocol != PROTO_ICMPV4) return -1;
-    struct icmpv4_hdr *icmp = (struct icmpv4_hdr *)(b + ETH_H_SIZE + IPV4_H_SIZE);
-    return ntohl(icmp->body) & 0x0000ffff;
+int get_icmp4_seqnum(const uint8_t *b)
+{
+   struct ipv4_hdr *rip = (struct ipv4_hdr *)(b + ETH_H_SIZE);
+   if (rip->protocol != PROTO_ICMPV4)
+      return -1;
+   struct icmpv4_hdr *icmp = (struct icmpv4_hdr *)(b + ETH_H_SIZE + IPV4_H_SIZE);
+   return ntohl(icmp->body) & 0x0000ffff;
 }
 
-char get_ip4_ttl(const uint8_t *b) {
+char get_ip4_ttl(const uint8_t *b)
+{
    struct ipv4_hdr *rip = (struct ipv4_hdr *)(b + ETH_H_SIZE);
    return rip->ttl;
 }
 
-char *get_ip4_src_addr(const uint8_t *b) {
+char *get_ip4_src_addr(const uint8_t *b)
+{
    struct ipv4_hdr *rip = (struct ipv4_hdr *)(b + ETH_H_SIZE);
    struct sockaddr *src_ip = sockaddr_create((uint8_t *)&rip->src_addr, AF_INET);
    char *addr = sockaddr_to_str(src_ip);
@@ -65,7 +71,8 @@ char *get_ip4_src_addr(const uint8_t *b) {
    return addr;
 }
 
-char *get_ip4_dst_addr(const uint8_t *b) {
+char *get_ip4_dst_addr(const uint8_t *b)
+{
    struct ipv4_hdr *rip = (struct ipv4_hdr *)(b + ETH_H_SIZE);
    struct sockaddr *dst_ip = sockaddr_create((uint8_t *)&rip->dst_addr, AF_INET);
    char *addr = sockaddr_to_str(dst_ip);
@@ -73,26 +80,32 @@ char *get_ip4_dst_addr(const uint8_t *b) {
    return addr;
 }
 
-int get_icmp6_type(const uint8_t *b) {
-    struct ipv6_hdr *rip = (struct ipv6_hdr *)(b + ETH_H_SIZE);
-    if (rip->next_header != PROTO_ICMPV6) return -1;
-    struct icmpv6_hdr *icmp = (struct icmpv6_hdr *)(b + ETH_H_SIZE + IPV6_H_SIZE);
-    return icmp->type;
+int get_icmp6_type(const uint8_t *b)
+{
+   struct ipv6_hdr *rip = (struct ipv6_hdr *)(b + ETH_H_SIZE);
+   if (rip->next_header != PROTO_ICMPV6)
+      return -1;
+   struct icmpv6_hdr *icmp = (struct icmpv6_hdr *)(b + ETH_H_SIZE + IPV6_H_SIZE);
+   return icmp->type;
 }
 
-int get_icmp6_seqnum(const uint8_t *b) {
-    struct ipv6_hdr *rip = (struct ipv6_hdr *)(b + ETH_H_SIZE);
-    if (rip->next_header != PROTO_ICMPV6) return -1;
-    struct icmpv6_hdr *icmp = (struct icmpv6_hdr *)(b + ETH_H_SIZE + IPV6_H_SIZE);
-    return ntohl(icmp->body) & 0x0000ffff;
+int get_icmp6_seqnum(const uint8_t *b)
+{
+   struct ipv6_hdr *rip = (struct ipv6_hdr *)(b + ETH_H_SIZE);
+   if (rip->next_header != PROTO_ICMPV6)
+      return -1;
+   struct icmpv6_hdr *icmp = (struct icmpv6_hdr *)(b + ETH_H_SIZE + IPV6_H_SIZE);
+   return ntohl(icmp->body) & 0x0000ffff;
 }
 
-char get_ip6_ttl(const uint8_t *b) {
+char get_ip6_ttl(const uint8_t *b)
+{
    struct ipv6_hdr *rip = (struct ipv6_hdr *)(b + ETH_H_SIZE);
    return rip->hop_limit;
 }
 
-char *get_ip6_src_addr(const uint8_t *b) {
+char *get_ip6_src_addr(const uint8_t *b)
+{
    struct ipv6_hdr *rip = (struct ipv6_hdr *)(b + ETH_H_SIZE);
    struct sockaddr *src_ip = sockaddr_create((uint8_t *)&rip->src_addr, AF_INET6);
    char *addr = sockaddr_to_str(src_ip);
@@ -100,7 +113,8 @@ char *get_ip6_src_addr(const uint8_t *b) {
    return addr;
 }
 
-char *get_ip6_dst_addr(const uint8_t *b) {
+char *get_ip6_dst_addr(const uint8_t *b)
+{
    struct ipv6_hdr *rip = (struct ipv6_hdr *)(b + ETH_H_SIZE);
    struct sockaddr *dst_ip = sockaddr_create((uint8_t *)&rip->dst_addr, AF_INET6);
    char *addr = sockaddr_to_str(dst_ip);

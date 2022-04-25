@@ -131,6 +131,7 @@ void mt_wait(struct mt *a, int if_index)
     struct interface *i = mt_get_interface(a, if_index);
     do
     {
+        // 减少无用的系统消耗
         sleep(1);
 
         struct pcap_pkthdr *header;
@@ -331,7 +332,6 @@ int check_permissions(void)
 // 主程序入口
 int main(int argc, char *argv[])
 {
-    int debug = 1;
     // 检查是否有超级管理员权限
     if (!check_permissions())
         return 1;
@@ -345,16 +345,16 @@ int main(int argc, char *argv[])
     printf("done\n");
     // 初始部分信息
     printf("初始化基础信息...");
-    struct mt *a = mt_create(args->w, args->z, args->r);
+    struct mt *meta = mt_create(args->w, args->z, args->r);
     printf("done\n");
 
     // 检查目标地址
     printf("读取目标地址...\n");
-    struct dst *d = dst_create_from_str(a, args->dst);
-    if (d == NULL)
+    struct dst *ip_target = dst_create_from_str(meta, args->dst);
+    if (ip_target == NULL)
     {
         printf("check the destination address\n");
-        mt_destroy(a);
+        mt_destroy(meta);
         free(args);
         return 1;
     }
@@ -364,39 +364,40 @@ int main(int argc, char *argv[])
     if (args->c == CMD_PING)
     {
         // n = ping所使用的探针数量
-        mt_ping(a, d, args->n);
+        printf("<<<<<开始ping>>>>>\n");
+        mt_ping(meta, ip_target, args->number_of_pings);
     }
     else if (args->c == CMD_MDA)
     {
-        // args->f (flow id)实际上类似于mt_traceroute中的args->m(methods),
         // 文中其他地方描述为flow type,不同的flow type会改变不同的数据包内容以应对不同的负载均衡
-        // f = 以下内容
-        // #define FLOW_ICMP_CHK 1  // icmp-chk
-        // #define FLOW_ICMP_DST 2  // icmp-dst
-        // #define FLOW_ICMP_FL 3   // icmp-fl
-        // #define FLOW_ICMP_TC 4   // icmp-tc
-        // #define FLOW_UDP_SPORT 5 // udp-sport
-        // #define FLOW_UDP_DST 6   // udp-dst
-        // #define FLOW_UDP_FL 7    // udp-fl
-        // #define FLOW_UDP_TC 8    // udp-tc
-        // #define FLOW_TCP_SPORT 9 // tcp-sport
-        // #define FLOW_TCP_DST 10  // tcp-dst
-        // #define FLOW_TCP_FL 11   // tcp-fl
-        // #define FLOW_TCP_TC 12   // tcp-tc
-        // t = MAX TTL
-        mt_mda(a, d, args->a, args->f, args->t);
+        // flow_type = 以下内容
+        // FLOW_ICMP_CHK 1  // icmp-chk
+        // FLOW_ICMP_DST 2  // icmp-dst
+        // FLOW_ICMP_FL 3   // icmp-fl
+        // FLOW_ICMP_TC 4   // icmp-tc
+        // FLOW_UDP_SPORT 5 // udp-sport
+        // FLOW_UDP_DST 6   // udp-dst
+        // FLOW_UDP_FL 7    // udp-fl
+        // FLOW_UDP_TC 8    // udp-tc
+        // FLOW_TCP_SPORT 9 // tcp-sport
+        // FLOW_TCP_DST 10  // tcp-dst
+        // FLOW_TCP_FL 11   // tcp-fl
+        // FLOW_TCP_TC 12   // tcp-tc
+        printf("<<<<<开始paris-traceroute(MDA)>>>>>\n");
+        mt_mda(meta, ip_target, args->confidence, args->flow_type, args->max_ttl);
     }
     else if (args->c == CMD_TRACEROUTE)
     {
         // m = ICMP/UDP/TCP
         // t = MAX TTL
         // p = 同时探测p个跳数
-        mt_traceroute(a, d, args->m, args->t, args->p);
+        printf("<<<<<开始paris-traceroute>>>>>\n");
+        mt_traceroute(meta, ip_target, args->m, args->max_ttl, args->p);
     }
 
     // 清理
-    dst_destroy(d);
-    mt_destroy(a);
+    dst_destroy(ip_target);
+    mt_destroy(meta);
     free(args);
 
     // 退出

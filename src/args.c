@@ -245,12 +245,12 @@ struct args *get_args(int argc, char **argv)
     memset(args, 0, sizeof(*args));
 
     // 加载默认参数
-    args->a = 95;
+    args->confidence = 95;
     args->c = CMD_TRACEROUTE;
-    args->f = FLOW_UDP_SPORT;
-    args->t = 30;
+    args->flow_type = FLOW_UDP_SPORT;
+    args->max_ttl = 30;
     args->m = METHOD_ICMP;
-    args->n = 5;
+    args->number_of_pings = 5;
     args->p = 3;
     args->r = 2;
     args->w = 5;
@@ -259,12 +259,12 @@ struct args *get_args(int argc, char **argv)
     // 尝试读取用户定义参数
     struct xoption opts[] = {
         {{"help", no_argument, NULL, 'h'}, show_usage, NULL},
-        {{"confidence", required_argument, NULL, 'a'}, parse_conf, &args->a},
+        {{"confidence", required_argument, NULL, 'a'}, parse_conf, &args->confidence},
         {{"command", required_argument, NULL, 'c'}, parse_cmd, &args->c},
-        {{"flow-id", required_argument, NULL, 'f'}, parse_flow_id, &args->f},
-        {{"max-ttl", required_argument, NULL, 't'}, parse_int, &args->t},
+        {{"flow-id", required_argument, NULL, 'f'}, parse_flow_id, &args->flow_type},
+        {{"max-ttl", required_argument, NULL, 't'}, parse_int, &args->max_ttl},
         {{"method", required_argument, NULL, 'm'}, parse_method, &args->m},
-        {{"send-probes", required_argument, NULL, 'n'}, parse_int, &args->n},
+        {{"send-probes", required_argument, NULL, 'n'}, parse_int, &args->number_of_pings},
         {{"probes-at-once", required_argument, NULL, 'p'}, parse_int, &args->p},
         {{"retries", required_argument, NULL, 'r'}, parse_int, &args->r},
         {{"wait", required_argument, NULL, 'w'}, parse_int, &args->w},

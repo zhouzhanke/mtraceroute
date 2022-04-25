@@ -59,3 +59,5 @@ mt.c is 程序入口
     3 - paris-traceroute
         3.1 - traceroute功能耗时时间长，默认2次重试+默认超时5s=10s，如果遇到无法探测节点就会用10s
         3.2 - 回收逻辑有误（已改正）
+    4 - ping
+        4.1 ping ipv4的TTL没有控制正确,系统从49开始递增,对比paris-traceroute实现逻辑，应该是IP ID和TTL写反了
