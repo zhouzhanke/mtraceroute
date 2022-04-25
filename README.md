@@ -57,3 +57,5 @@ mt.c is 程序入口
     1 - ping
     2 - MDA
     3 - paris-traceroute
+        3.1 - traceroute功能耗时时间长，默认2次重试+默认超时5s=10s，如果遇到无法探测节点就会用10s
+        3.2 - 回收逻辑有误（已改正）

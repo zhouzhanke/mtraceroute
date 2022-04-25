@@ -101,6 +101,7 @@ static void mt_receive(struct interface *i, const uint8_t *buf,
 
 static int mt_unanswered_probes(struct mt *a, struct interface *i)
 {
+    printf("尝试重发...");
     struct list_item *it;
     int count = 0;
     for (it = i->probes->first; it != NULL; it = it->next)
@@ -120,24 +121,31 @@ static int mt_unanswered_probes(struct mt *a, struct interface *i)
         mt_retry(a, i, p);
         count++;
     }
+    printf("done\n");
     return count;
 }
 
 void mt_wait(struct mt *a, int if_index)
 {
     struct interface *i = mt_get_interface(a, if_index);
-    while (mt_unanswered_probes(a, i) > 0)
+    do
     {
+        sleep(1);
+
         struct pcap_pkthdr *header;
         const u_char *pkt_data;
-        if (pcap_next_ex(i->pcap_handle, &header, &pkt_data) > 0)
+
+        printf("回收数据...");
+        while (pcap_next_ex(i->pcap_handle, &header, &pkt_data) > 0)
         {
             struct timespec ts;
             ts.tv_sec = header->ts.tv_sec;
             ts.tv_nsec = header->ts.tv_usec * 1000;
             mt_receive(i, (uint8_t *)pkt_data, header->caplen, ts);
         }
-    }
+        printf("done\n");
+
+    } while (mt_unanswered_probes(a, i) > 0);
 }
 
 struct route *mt_get_route(struct mt *a, const struct addr *dst)
@@ -321,19 +329,25 @@ int check_permissions(void)
 // 主程序入口
 int main(int argc, char *argv[])
 {
+    int debug = 1;
     // 检查是否有超级管理员权限
     if (!check_permissions())
         return 1;
 
     // 检查传入参数
+    printf("读取参数...");
     struct args *args = get_args(argc, argv);
     if (args == NULL)
         return 1;
 
+    printf("done\n");
     // 初始部分信息
+    printf("初始化基础信息...");
     struct mt *a = mt_create(args->w, args->z, args->r);
+    printf("done\n");
 
     // 检查目标地址
+    printf("读取目标地址...");
     struct dst *d = dst_create_from_str(a, args->dst);
     if (d == NULL)
     {
@@ -342,6 +356,7 @@ int main(int argc, char *argv[])
         free(args);
         return 1;
     }
+    printf("done\n");
 
     // 根据参数分别启动以下3种子程序
     if (args->c == CMD_PING)

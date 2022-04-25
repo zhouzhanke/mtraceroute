@@ -99,6 +99,7 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
         int pn = 0;
 
         // 循环发送探针->回收探针->输出结果
+        printf("发送探针...\n");
         for (pn = 0; pn < at_once && ttl <= max_ttl; pn++, ttl++) // at once 意思是同时探测3跳
         {
 
@@ -160,6 +161,7 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
         }
 
         // 回收探针，如果失败，重新发送
+        printf("回收探针或重发探针...\n");
         mt_wait(a, dst->if_index);
 
         // 获取回收到的探针
@@ -168,6 +170,7 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
         struct list *it = i->probes;
 
         // 输出探测结果
+        printf("打印结果...\n");
         while (i->probes->count > 0)
         {
             struct probe *probe = (struct probe *)list_pop(i->probes);
@@ -212,6 +215,7 @@ static int traceroute(struct mt *a, const struct dst *dst, int probe_type,
 
             probe_destroy(probe);
         }
+        printf("结束一次循环\n");
         if (finished)
             break;
     }
