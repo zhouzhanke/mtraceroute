@@ -35,7 +35,7 @@
 
 int pdu_ipv6(struct packet *p, uint8_t traffic_class,
              uint32_t flow_label, uint16_t length,
-             uint8_t next_header, uint8_t hop_limit,
+             uint8_t next_header, uint8_t ttl,
              const uint8_t *src_addr, const uint8_t *dst_addr) {
 
     uint8_t version = 6; // IPv6
@@ -48,7 +48,7 @@ int pdu_ipv6(struct packet *p, uint8_t traffic_class,
     hdr.version_tc_fl = htonl(version << 28 | traffic_class << 20 | flow_label);
     hdr.length        = htons(length);
     hdr.next_header   = next_header;
-    hdr.hop_limit     = hop_limit;
+    hdr.hop_limit     = ttl;
 
     if (src_addr != NULL) memcpy(&(hdr.src_addr), src_addr, 16);
     if (dst_addr != NULL) memcpy(&(hdr.dst_addr), dst_addr, 16);

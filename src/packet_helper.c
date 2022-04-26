@@ -214,7 +214,7 @@ struct packet *packet_helper_tcp4(const uint8_t *eth_dst, const uint8_t *eth_src
 struct packet *packet_helper_tcp6(const uint8_t *eth_dst, const uint8_t *eth_src,
                                   const uint8_t *ip_src, const uint8_t *ip_dst,
                                   uint8_t traffic_class, uint32_t flow_label,
-                                  uint8_t hop_limit, uint16_t src_port,
+                                  uint8_t ttl, uint16_t src_port,
                                   uint16_t dst_port, uint32_t seq_numb)
 {
 
@@ -222,7 +222,9 @@ struct packet *packet_helper_tcp6(const uint8_t *eth_dst, const uint8_t *eth_src
 
     uint8_t eth_tag = pdu_eth_ipv6(p, eth_dst, eth_src);
 
-    uint8_t ip_tag = pdu_ipv6(p, traffic_class, flow_label, 0, 0, hop_limit, ip_src, ip_dst);
+    // traffic_class = 0
+    // flow_label = 0
+    uint8_t ip_tag = pdu_ipv6(p, traffic_class, flow_label, 0, 0, ttl, ip_src, ip_dst);
 
     uint8_t tcp_tag = pdu_tcp(p, src_port, dst_port, seq_numb, 0, TCP_DATA_OFFSET, TCP_SYN, 0, 0, 0);
 

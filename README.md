@@ -57,8 +57,18 @@ mt.c is 程序入口
     1 - ping
     2 - MDA
     3 - paris-traceroute
+
+主要问题
+
+    1 - 不少函数调用没有进行特殊情况的处理，商业化需要补充。
+    2 - 没有对网卡进行控制。
+    3 - 发现少量编程错误。
+    4 - 程序运行效率较低，并且没有对最大资源进行限制。
+
+分别问题
+    
+    1 - paris-traceroute
         3.1 - traceroute功能耗时时间长，默认2次重试+默认超时5s=10s，如果遇到无法探测节点就会用10s
-        3.2 - 回收逻辑有误（已改正）
-    4 - ping
+    2 - ping
         4.1 ping ipv4的TTL没有控制正确,系统从49开始递增,对比paris-traceroute实现逻辑，应该是IP ID和TTL写反了
-    5 - MDA
+    3 - MDA

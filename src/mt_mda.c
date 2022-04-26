@@ -150,6 +150,7 @@ static struct addr *flow_id_to_addr(struct addr *a, int flow_id)
         return NULL;
     }
     struct addr *new = addr_copy(a);
+    // 目标地址末尾微量浮动???
     new->addr[size - 1] = (flow_id & 0xFF);
     return new;
 }
@@ -173,6 +174,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
     if (m->dst->ip_dst->type == ADDR_IPV4)
     {
 
+        // extra control on IP header destination address
         if (m->flow_type == FLOW_UDP_DST)
         {
 
@@ -183,6 +185,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_udp4);
             addr_destroy(dst_fid);
         }
+        // extra control on UDP header source port
         else if (m->flow_type == FLOW_UDP_SPORT)
         {
 
@@ -191,6 +194,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
                                    0, MDA_UDP_SPORT + flow_id, MDA_UDP_DPORT, probe_id);
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_udp4);
         }
+        // extra control on IP header destination address
         else if (m->flow_type == FLOW_ICMP_DST)
         {
 
@@ -201,6 +205,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_icmp4);
             addr_destroy(dst_fid);
         }
+        // extra control on ICMP header checksum
         else if (m->flow_type == FLOW_ICMP_CHK)
         {
 
@@ -209,6 +214,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
                                     0, MDA_ICMP_ID, probe_id, flow_id);
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_icmp4);
         }
+        // extra control on IP header destination address
         else if (m->flow_type == FLOW_TCP_DST)
         {
 
@@ -219,6 +225,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_tcp4);
             addr_destroy(dst_fid);
         }
+        // extra control on TCP header source port
         else if (m->flow_type == FLOW_TCP_SPORT)
         {
 
@@ -231,6 +238,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
     else if (m->dst->ip_dst->type == ADDR_IPV6)
     {
 
+        // extra control on IP header destination address
         if (m->flow_type == FLOW_ICMP_DST)
         {
 
@@ -241,6 +249,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_icmp6);
             addr_destroy(dst_fid);
         }
+        // extra control on IP header flow label
         else if (m->flow_type == FLOW_ICMP_FL)
         {
 
@@ -250,6 +259,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
 
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_icmp6);
         }
+        // extra control on IP header traffic class
         else if (m->flow_type == FLOW_ICMP_TC)
         {
 
@@ -258,6 +268,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
                                     MDA_ICMP_ID, probe_id, 0);
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_icmp6);
         }
+        // extra control on ICMP header checksum
         else if (m->flow_type == FLOW_ICMP_CHK)
         {
 
@@ -292,6 +303,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
                                    MDA_UDP_SPORT, MDA_UDP_DPORT, probe_id);
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_udp6);
         }
+        // extra control on UDP header source port
         else if (m->flow_type == FLOW_UDP_SPORT)
         {
 
@@ -326,6 +338,7 @@ static void mda_send(struct mda *m, uint16_t flow_id,
                                    MDA_TCP_SPORT, MDA_TCP_DPORT, probe_id);
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_tcp6);
         }
+        // extra control on TCP header source port
         else if (m->flow_type == FLOW_TCP_SPORT)
         {
 

@@ -37,14 +37,15 @@
 #include "pdu_udp.h"
 
 int pdu_udp(struct packet *p, uint16_t src_port, uint16_t dst_port,
-            uint16_t length, uint16_t checksum) {
+            uint16_t length, uint16_t checksum)
+{
 
     struct udp_hdr hdr;
     memset(&hdr, 0, UDP_H_SIZE);
 
     hdr.src_port = htons(src_port);
     hdr.dst_port = htons(dst_port);
-    hdr.length   = htons(length);
+    hdr.length = htons(length);
     hdr.checksum = checksum;
 
     uint8_t tag = packet_block_append(p, PACKET_BLOCK_UDP, &hdr,
@@ -53,37 +54,47 @@ int pdu_udp(struct packet *p, uint16_t src_port, uint16_t dst_port,
     return tag;
 }
 
-int pdu_udp_length(struct packet *p, int tag) {
+int pdu_udp_length(struct packet *p, int tag)
+{
     struct packet_block *b = packet_block_get(p, tag);
-    if (b == NULL || b->type != PACKET_BLOCK_UDP) return -1;
+    if (b == NULL || b->type != PACKET_BLOCK_UDP)
+        return -1;
     struct udp_hdr *hdr = (struct udp_hdr *)&p->buf[b->position];
     hdr->length = htons(p->length - b->position);
     return 0;
 }
 
-int pdu_udp_checksum(struct packet *p, int tag, int ip_tag) {
+int pdu_udp_checksum(struct packet *p, int tag, int ip_tag)
+{
 
     struct packet_block *b = packet_block_get(p, tag);
-    if (b == NULL || b->type != PACKET_BLOCK_UDP) return -1;
+    if (b == NULL || b->type != PACKET_BLOCK_UDP)
+        return -1;
     struct udp_hdr *hdr = (struct udp_hdr *)&p->buf[b->position];
 
     struct packet_block *ipb = packet_block_get(p, ip_tag);
-    if (ipb == NULL) return -1;
+    if (ipb == NULL)
+        return -1;
 
     void *ph_ptr = NULL;
     int ph_size = 0;
 
-    if (ipb->type == PACKET_BLOCK_IPV4) {
+    if (ipb->type == PACKET_BLOCK_IPV4)
+    {
         struct ipv4_hdr *ipv4_hdr = (struct ipv4_hdr *)&p->buf[ipb->position];
         ph_ptr = pdu_ipv4_ph(ipv4_hdr->src_addr, ipv4_hdr->dst_addr,
                              PROTO_UDP, hdr->length);
         ph_size = IPV4_PH_SIZE;
-    } else if (ipb->type == PACKET_BLOCK_IPV6) {
+    }
+    else if (ipb->type == PACKET_BLOCK_IPV6)
+    {
         struct ipv6_hdr *ipv6_hdr = (struct ipv6_hdr *)&p->buf[ipb->position];
         ph_ptr = pdu_ipv6_ph(ipv6_hdr->src_addr, ipv6_hdr->dst_addr,
                              hdr->length, PROTO_UDP);
         ph_size = IPV6_PH_SIZE;
-    } else {
+    }
+    else
+    {
         return -1;
     }
 

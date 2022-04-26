@@ -77,7 +77,8 @@
     "queue": "c",
     "stdexcept": "c",
     "cinttypes": "c",
-    "cstdbool": "c"
+    "cstdbool": "c",
+    "protocol_numbers.h": "c"
   },
   "cSpell.words": [
     "Almeida",
