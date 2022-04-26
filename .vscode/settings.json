@@ -78,5 +78,10 @@
     "stdexcept": "c",
     "cinttypes": "c",
     "cstdbool": "c"
-  }
+  },
+  "cSpell.words": [
+    "Almeida",
+    "rlca",
+    "ufmg"
+  ]
 }

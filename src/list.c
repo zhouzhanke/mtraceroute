@@ -133,8 +133,7 @@ void *list_pop(struct list *l)
     return data;
 }
 
-struct list_item *list_find(struct list *l, const void *cmp_data,
-                            int (*cmp_fn)(const void *, const void *))
+struct list_item *list_find(struct list *l, const void *cmp_data, int (*cmp_fn)(const void *, const void *))
 {
     struct list_item *i;
     for (i = l->first; i != NULL; i = i->next)

@@ -43,6 +43,7 @@ struct link *link_open(int if_index)
     memset(l, 0, sizeof(*l));
 
     l->if_index = if_index;
+    // 使用socket开启网络
     l->fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 
     if (l->fd == -1)

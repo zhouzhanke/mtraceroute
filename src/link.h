@@ -32,11 +32,13 @@
 #include <stdint.h>
 #include <time.h>
 
-struct link {
+// 创建套接字，发送探测包等
+struct link
+{
     int fd;
-    int if_index;
-    uint32_t write_count;
-    uint32_t write_bytes;
+    int if_index;         //  网口
+    uint32_t write_count; // 探针发送次数
+    uint32_t write_bytes; // 发送字节数
 };
 
 struct link *link_open(int if_index);

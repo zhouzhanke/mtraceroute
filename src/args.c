@@ -249,12 +249,12 @@ struct args *get_args(int argc, char **argv)
     args->c = CMD_TRACEROUTE;
     args->flow_type = FLOW_UDP_SPORT;
     args->max_ttl = 30;
-    args->m = METHOD_ICMP;
+    args->packet_type = METHOD_ICMP;
     args->number_of_pings = 5;
-    args->p = 3;
-    args->r = 2;
-    args->w = 5;
-    args->z = 20;
+    args->hops_per_round = 3;
+    args->retries = 2;
+    args->probe_time_out = 5;
+    args->send_wait = 20;
 
     // 尝试读取用户定义参数
     struct xoption opts[] = {
@@ -263,12 +263,12 @@ struct args *get_args(int argc, char **argv)
         {{"command", required_argument, NULL, 'c'}, parse_cmd, &args->c},
         {{"flow-id", required_argument, NULL, 'f'}, parse_flow_id, &args->flow_type},
         {{"max-ttl", required_argument, NULL, 't'}, parse_int, &args->max_ttl},
-        {{"method", required_argument, NULL, 'm'}, parse_method, &args->m},
+        {{"method", required_argument, NULL, 'm'}, parse_method, &args->packet_type},
         {{"send-probes", required_argument, NULL, 'n'}, parse_int, &args->number_of_pings},
-        {{"probes-at-once", required_argument, NULL, 'p'}, parse_int, &args->p},
-        {{"retries", required_argument, NULL, 'r'}, parse_int, &args->r},
-        {{"wait", required_argument, NULL, 'w'}, parse_int, &args->w},
-        {{"send-wait", required_argument, NULL, 'z'}, parse_int, &args->z},
+        {{"probes-at-once", required_argument, NULL, 'p'}, parse_int, &args->hops_per_round},
+        {{"retries", required_argument, NULL, 'r'}, parse_int, &args->retries},
+        {{"wait", required_argument, NULL, 'w'}, parse_int, &args->probe_time_out},
+        {{"send-wait", required_argument, NULL, 'z'}, parse_int, &args->send_wait},
         {{NULL, no_argument, NULL, 0}, NULL, NULL}};
 
     if (parse_args(argc, argv, args, opts) == 1)

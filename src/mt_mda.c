@@ -626,7 +626,7 @@ static int next_hops(struct mda *mda, char *addr, int ttl, struct list *flows,
         {
             sent++;
         }
-        // 如果不满足mda算法，继续发送
+        // 如果不满足mda算法的数量，继续发送
         else if (sent < mda_number)
         {
             mda_send(mda, f->flow_id, f->flow_id, ttl + 1);
@@ -648,10 +648,11 @@ static int next_hops(struct mda *mda, char *addr, int ttl, struct list *flows,
         struct probe *probe = (struct probe *)list_pop(inter->probes);
         char *addr = NULL;
         struct timespec rtt;
+        // 读取记过并存入总flow记录
         mda_read_response(mda, probe, &addr, &rtt);
         struct next_hop *nh = next_hop_create(addr, rtt);
 
-        // 判断下一跳有几个响应目标
+        // 判断下一跳有几个响应目标,靠响应数量结合MDA来确定下一个循环flow的数量
         if (list_find(nh_list, nh, &next_hop_cmp) == NULL)
         {
             list_insert(nh_list, nh);
@@ -670,6 +671,7 @@ static int next_hops(struct mda *mda, char *addr, int ttl, struct list *flows,
 
 static void more_flows(struct mda *mda, char *addr, int ttl, int number_of_new_flows)
 {
+    // 理论上不会触发
     if (ttl == 0)
     {
         int found = 0;
@@ -754,7 +756,8 @@ static void mda_print(int ttl, char *addr, struct list *nh, int per_packet)
 
 static int mda(struct mda *mda)
 {
-    // MDA 算法结果，数量=可发现负载均衡数（目前128个，第一个不算）
+    // MDA 算法结果，数量=可发现负载均衡数（目前支持128个负载均衡的计算）
+    // 分为三种情况，90% 95% 99%的结果覆盖率
     int k[][3] = {
         {0, 0, 0},
         {1, 1, 1},
@@ -891,27 +894,36 @@ static int mda(struct mda *mda)
 
     // 根据设定获取率选择初始MDA算法表
     int mda_number = k[2][mda->confidence];
-    // 录入算法表ttl=0
-    int i = 0;
-    for (i = 0; i < mda_number; i++)
-    {
-        add_flow(mda, 0, MDA_MIN_FLOW_ID + i, mda->root, -1);
-    }
 
     int ttl = 0;
-    for (ttl = 0; ttl <= mda->max_ttl; ttl++)
+    // 录入算法表ttl=0到flow列表, 来规避第一次循环的特殊情况
+    // 创建（添加）n个struct flow_ttl实例，并插入mda->flow_list
+    // struct flow_ttl成员赋值:  对应add_flow()后4个参数；
+    // ft->ttl           = ttl;	0
+    // ft->flow_id       = flow_id;  1 2 3 4 5 ...
+    // ft->response      = strdup(resp);
+    // ft->response_type = type;    -1
+    for (int i = 0; i < mda_number; i++)
     {
-        // 读取特定TTL的flow列表
+        add_flow(mda, ttl, MDA_MIN_FLOW_ID + i, mda->root, -1);
+    }
+
+    for (ttl; ttl <= mda->max_ttl; ttl++)
+    {
+        // 读取特定TTL的flow列表来用作本次循环次数的依据
         struct list *addrs_ttl = get_flows_ttl(mda, ttl);
 
         // 执行MDA
+        //取一个发送响应的IP地址  初始化时为"root"，之后为发送响应的IP
+        //这里，编程者用了一技巧，就是初始状态收到了n个来自“root”的响应；
+        //这样，程序执行过程就统一为“分析响应”->"发现该响应的下一跳接口"
         while (addrs_ttl->count > 0)
         {
             struct flow_ttl *flow_ttl = (struct flow_ttl *)list_pop(addrs_ttl);
             char *addr = flow_ttl->response;
             char *addr_dst = addr_to_str(mda->dst->ip_dst);
 
-            // 当达到目标IP时重新开始循环
+            // 当达到目标IP时不继续探测
             if (strcmp(addr, addr_dst) == 0)
             {
                 free(addr_dst);
@@ -929,21 +941,25 @@ static int mda(struct mda *mda)
                 continue;
             }
 
-            struct list *nh_list = list_create();
+            // this->count 用来更新MDA flow数量
+            // this->probe 用来输出结果
+            struct list *next_hop_list = list_create();
             int flows_sent = 0;
+            // 用来判断while循环的flag，应该可以改进
             int new_next_hop = 1;
             while (new_next_hop)
             {
+                //返回当前TTL下addr(响应IP)对应的flow ID
                 struct list *flows = get_flows(mda, ttl, addr);
 
-                int total_next_hops = nh_list->count;
-                if (nh_list->count == 0)
+                int total_next_hops = next_hop_list->count;
+                if (next_hop_list->count == 0)
                     total_next_hops = 1;
 
                 // 读取MDA算法表
                 mda_number = k[total_next_hops + 1][mda->confidence];
 
-                // 如果当前flow数量不满足MDA结果，增加flow数量并发送探针
+                // 如果当前flow数量不满足MDA算法表，增加flow数量并发送探针
                 if (flows->count < mda_number)
                 {
                     more_flows(mda, addr, ttl, mda_number - flows->count);
@@ -952,17 +968,19 @@ static int mda(struct mda *mda)
                 }
 
                 // 发送探针判断下一跳有多少个新的目标，并以此为依据读取MDA算法表
-                new_next_hop = next_hops(mda, addr, ttl, flows, mda_number, &flows_sent, nh_list);
+                // next_hope_list是更新MDA的依据
+                // 返回结果是决定是否结束循环的依据，应该可以改进
+                new_next_hop = next_hops(mda, addr, ttl, flows, mda_number, &flows_sent, next_hop_list);
 
-                // 如果响应目标只有1个也结束循环
-                if (new_next_hop == 1 && nh_list->count == 1)
+                // 特殊情况下结束循环
+                if (new_next_hop == 1 && next_hop_list->count == 1)
                     new_next_hop = 0;
                 list_destroy(flows);
             }
 
             // 判断下一跳是否是per-packet负载均衡
             int per_packet = 0;
-            if (nh_list->count > 1)
+            if (next_hop_list->count > 1)
             {
                 struct list *flows = get_flows(mda, ttl, addr);
                 struct flow_ttl *f = (struct flow_ttl *)list_pop(flows);
@@ -974,16 +992,16 @@ static int mda(struct mda *mda)
             }
 
             // 输出结果
-            mda_print(ttl, addr, nh_list, per_packet);
+            mda_print(ttl, addr, next_hop_list, per_packet);
 
             // 清除
-            while (nh_list->count > 0)
+            while (next_hop_list->count > 0)
             {
-                struct next_hop *nh = (struct next_hop *)list_pop(nh_list);
+                struct next_hop *nh = (struct next_hop *)list_pop(next_hop_list);
                 free(nh->addr);
                 next_hop_destroy(nh);
             }
-            list_destroy(nh_list);
+            list_destroy(next_hop_list);
         }
 
         list_destroy(addrs_ttl);
@@ -992,6 +1010,8 @@ static int mda(struct mda *mda)
     return 0;
 }
 
+// 创建struct mda的一个实例，然后执行多路径探测mda
+// 输入参数：struct mt；目的地址（单个地址）；置信度；流ID类型；最大TTL
 int mt_mda(struct mt *a, struct dst *dst, int confidence,
            int flow_type, int max_ttl)
 {

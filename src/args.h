@@ -56,12 +56,12 @@ struct args
     int c; // command
     int flow_type; // flow-id
     int max_ttl; // max-ttl
-    int m; // method
+    int packet_type; // method
     int number_of_pings; // send-probes
-    int p; // probes-at-once
-    int r; // retries
-    int w; // wait
-    int z; // send-wait
+    int hops_per_round; // probes-at-once
+    int retries; // retries
+    int probe_time_out; // wait
+    int send_wait; // send-wait
 };
 
 struct args *get_args(int argc, char **argv);

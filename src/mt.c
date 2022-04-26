@@ -47,16 +47,32 @@
 #define MT_PING 2
 #define MT_TRACEROUTE 3
 
+// 探针发送，被mt_mda、mt_nd、mt_ping、mt_traceroute调用
+// buf ：探针包数据     fn：响应匹配函数
 struct probe *mt_send(struct mt *a, int if_index, const uint8_t *buf,
                       uint32_t len, match_fn fn)
 {
     // 初始化网络
+    //如果if_index存在，返回对应的interface；
+    //不存在，创建一struct interface实体，并初始化以下：
+    //if_index、hw_addr
+    //link，通过link_open创建一个RAW套接字，套接字创建失败没有处理
+    //probes,一个list
+    //在i上打开pcap
+    //最后将i插入mt的intreface的list中
     struct interface *i = mt_get_interface(a, if_index);
+
     // 生成探针
+    //程序  p->retries   = 0;  命令行参数怎么办呢，这个应该是重发了多少计数
+    //探针响应匹配函数，也在p中
+    //探针匹配回调函数赋值 p->fn = fn
     struct probe *p = probe_create(buf, len, fn);
+
     // 发送
+    //p->sent_time在sendto时赋值
     link_write(i->link, p->probe, p->probe_len, &(p->sent_time));
-    // 储存发送探针
+
+    // 储存发送探针, 以便在接受时匹配
     list_insert(i->probes, p);
 
     // 发送间隔
@@ -79,12 +95,15 @@ struct probe *mt_send(struct mt *a, int if_index, const uint8_t *buf,
     return p;
 }
 
+// 重发探针，记下重发次数
 static void mt_retry(struct mt *a, struct interface *i, struct probe *p)
 {
     link_write(i->link, p->probe, p->probe_len, &(p->sent_time));
     p->retries++;
 }
 
+// 遍历某个网口上的所有探针，并与响应相匹配
+// 被本模块的mt_wait()调用
 static void mt_receive(struct interface *i, const uint8_t *buf,
                        uint32_t len, struct timespec ts)
 {
@@ -100,6 +119,12 @@ static void mt_receive(struct interface *i, const uint8_t *buf,
     }
 }
 
+// 遍历某个网口上的所有探针，重发未响应的探针，几种情况除外，函数返回的是未收到响应的探针的计数
+
+// 1. 匹配函数未空null；
+// 2. 响应包长度大于0；
+// 3. 响应超时，试图接收响应时间-探针发送时间；
+// 4. 达到重发次数 	              总发送报数=1+retries
 static int mt_unanswered_probes(struct mt *a, struct interface *i)
 {
     printf("尝试重发...");
@@ -126,17 +151,19 @@ static int mt_unanswered_probes(struct mt *a, struct interface *i)
     return count;
 }
 
+// 尝试接收所有是未收到响应的探针的的响应包，前述几个例外除外
 void mt_wait(struct mt *a, int if_index)
 {
     struct interface *i = mt_get_interface(a, if_index);
     do
     {
-        // 减少无用的系统消耗
+        // 增加1秒等待时间减少系统资源消耗
         sleep(1);
 
         struct pcap_pkthdr *header;
         const u_char *pkt_data;
 
+        // 原本是if，更改为while
         printf("回收数据...");
         while (pcap_next_ex(i->pcap_handle, &header, &pkt_data) > 0)
         {
@@ -205,10 +232,12 @@ struct interface *mt_get_interface(struct mt *a, int if_index)
     i->if_index = if_index;
     if_indextoname(if_index, i->if_name);
     i->hw_addr = iface_hw_addr(if_index);
+    // 使用socket开启网络
     i->link = link_open(if_index);
     i->probes = list_create();
     if (i->probes == NULL)
         return NULL;
+    // 使用pcap控制网络
     interface_pcap_open(i);
 
     list_insert(a->interfaces, i);
@@ -336,19 +365,25 @@ int main(int argc, char *argv[])
     if (!check_permissions())
         return 1;
 
-    // 检查传入参数
+    // 检查传入参数,并储存到args中
     printf("读取参数...");
     struct args *args = get_args(argc, argv);
     if (args == NULL)
         return 1;
-
     printf("done\n");
-    // 初始部分信息
+
+    // 初始化与网络相关的信息，interfaces, neighbors,routes
+    // 缺少null错误处理
+    // 发送探针时，只制定目标地址，没有指定网卡
+    // default values, probe time out=1,send_wait=20,retries=2,probes_count=0
     printf("初始化基础信息...");
-    struct mt *meta = mt_create(args->w, args->z, args->r);
+    struct mt *meta = mt_create(args->probe_time_out, args->send_wait, args->retries);
     printf("done\n");
 
-    // 检查目标地址
+    // 读取目标地址并检查
+    //从命令行参数 address,
+    //调用addr_create_from_str创建struct addr 实例，两个成员，其一ipv4/ipv6,其二，ip地址
+    //调用dst_create创建struct dst实例，主要工作是创建与IP地址对应的路由表项，struct mt中的routes list
     printf("读取目标地址...\n");
     struct dst *ip_target = dst_create_from_str(meta, args->dst);
     if (ip_target == NULL)
@@ -363,7 +398,6 @@ int main(int argc, char *argv[])
     // 根据参数分别启动以下3种子程序
     if (args->c == CMD_PING)
     {
-        // n = ping所使用的探针数量
         printf("<<<<<开始ping>>>>>\n");
         mt_ping(meta, ip_target, args->number_of_pings);
     }
@@ -383,16 +417,16 @@ int main(int argc, char *argv[])
         // FLOW_TCP_DST 10  // tcp-dst
         // FLOW_TCP_FL 11   // tcp-fl
         // FLOW_TCP_TC 12   // tcp-tc
+        // default value: max ttl = 30, confidence = 95, flow type = UDP SPORT
         printf("<<<<<开始paris-traceroute(MDA)>>>>>\n");
         mt_mda(meta, ip_target, args->confidence, args->flow_type, args->max_ttl);
     }
     else if (args->c == CMD_TRACEROUTE)
     {
         // m = ICMP/UDP/TCP
-        // t = MAX TTL
-        // p = 同时探测p个跳数
+        // default values: hops per round = 3, max ttl =30, packet type = ICMP
         printf("<<<<<开始paris-traceroute>>>>>\n");
-        mt_traceroute(meta, ip_target, args->m, args->max_ttl, args->p);
+        mt_traceroute(meta, ip_target, args->packet_type, args->max_ttl, args->hops_per_round);
     }
 
     // 清理
