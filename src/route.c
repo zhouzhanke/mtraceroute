@@ -40,8 +40,10 @@
 #define MSGBUF 1024
 
 static int route_lookup(const struct addr *dst, int *if_index,
-                        struct addr **gateway) {
+                        struct addr **gateway)
+{
     int len = (dst->type == ADDR_IPV4) ? 4 : 16;
+    // get process ID
     uint32_t pid = getpid();
 
     // Construct the RTM_GETROUTE request and send it
@@ -49,46 +51,55 @@ static int route_lookup(const struct addr *dst, int *if_index,
     memset(msg_buf, 0, MSGBUF);
 
     struct nlmsghdr *msg = (struct nlmsghdr *)msg_buf;
-    msg->nlmsg_len   = NLMSG_LENGTH(sizeof(struct rtmsg)) + RTA_LENGTH(len);
-    msg->nlmsg_type  = RTM_GETROUTE;
+    msg->nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg)) + RTA_LENGTH(len);
+    msg->nlmsg_type = RTM_GETROUTE;
     msg->nlmsg_flags = NLM_F_REQUEST;
-    msg->nlmsg_seq   = 1;
-    msg->nlmsg_pid   = pid;
+    msg->nlmsg_seq = 1;
+    msg->nlmsg_pid = pid;
 
     struct rtmsg *rmsg = NLMSG_DATA(msg);
-    rmsg->rtm_family   = (dst->type == ADDR_IPV4) ? AF_INET : AF_INET6;
-    rmsg->rtm_dst_len  = len * 8;
+    rmsg->rtm_family = (dst->type == ADDR_IPV4) ? AF_INET : AF_INET6;
+    rmsg->rtm_dst_len = len * 8;
 
     struct rtattr *rta = RTM_RTA(rmsg);
-    rta->rta_type      = RTA_DST;
-    rta->rta_len       = RTA_LENGTH(len);
+    rta->rta_type = RTA_DST;
+    rta->rta_len = RTA_LENGTH(len);
 
     memcpy(RTA_DATA(rta), dst->addr, len);
 
+    // 测试网络？？？
     int fd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
-    if (fd == -1) return -1;
+    if (fd == -1)
+        return -1;
 
     int send_len = send(fd, msg_buf, msg->nlmsg_len, 0);
-    if (send_len == -1) goto fail;
-    
+    if (send_len == -1)
+        goto fail;
+
     // Receive and parse the response
     uint8_t recv_buf[MSGBUF];
     memset(recv_buf, 0, MSGBUF);
 
     int recv_len = recv(fd, recv_buf, sizeof(recv_buf), 0);
-    if (recv_len == -1) goto fail;
+    if (recv_len == -1)
+        goto fail;
 
     struct nlmsghdr *resp = (struct nlmsghdr *)recv_buf;
 
-    if (resp->nlmsg_pid != pid || resp->nlmsg_type != RTM_NEWROUTE) goto fail;
+    if (resp->nlmsg_pid != pid || resp->nlmsg_type != RTM_NEWROUTE)
+        goto fail;
 
     struct rtmsg *rtmsg = NLMSG_DATA(resp);
     int rlen = resp->nlmsg_len - NLMSG_LENGTH(sizeof(*rtmsg));
 
-    for (rta = RTM_RTA(rtmsg); RTA_OK(rta, rlen); rta = RTA_NEXT(rta, rlen)) {
-        if (rta->rta_type == RTA_OIF) {
+    for (rta = RTM_RTA(rtmsg); RTA_OK(rta, rlen); rta = RTA_NEXT(rta, rlen))
+    {
+        if (rta->rta_type == RTA_OIF)
+        {
             *if_index = *((int *)RTA_DATA(rta));
-        } else if (rta->rta_type == RTA_GATEWAY) {
+        }
+        else if (rta->rta_type == RTA_GATEWAY)
+        {
             *gateway = addr_create(dst->type, RTA_DATA(rta));
         }
     }
@@ -101,12 +112,16 @@ fail:
     return -1;
 }
 
-struct route *route_create(const struct addr *dst) {
+struct route *route_create(const struct addr *dst)
+{
     struct route *r = malloc(sizeof(*r));
-    if (r == NULL) return NULL;
+    if (r == NULL)
+        return NULL;
     memset(r, 0, sizeof(*r));
 
-    if (route_lookup(dst, &r->if_index, &r->gateway) == -1) {
+    // 检查网卡
+    if (route_lookup(dst, &r->if_index, &r->gateway) == -1)
+    {
         free(r);
         return NULL;
     }
@@ -114,7 +129,8 @@ struct route *route_create(const struct addr *dst) {
     return r;
 }
 
-void route_destroy(struct route *r) {
+void route_destroy(struct route *r)
+{
     addr_destroy(r->gateway);
     addr_destroy(r->dst);
     free(r);

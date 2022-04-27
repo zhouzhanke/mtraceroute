@@ -32,16 +32,17 @@
 #include "pdu_arp.h"
 
 int pdu_arp_request(struct packet *p, const uint8_t *sender_hw,
-                    const uint8_t *sender_ip, const uint8_t *target_ip) {
+                    const uint8_t *sender_ip, const uint8_t *target_ip)
+{
 
     struct arp_hdr hdr;
     memset(&hdr, 0, ARP_H_SIZE);
 
     hdr.hw_type = htons(ARP_HW_TYPE_ETH);
     hdr.ip_type = htons(ARP_IP_TYPE_IPV4);
-    hdr.hw_len  = ARP_HW_ADDR_SIZE;
-    hdr.ip_len  = ARP_IP_ADDR_SIZE;
-    hdr.opcode  = htons(ARP_OP_REQ);
+    hdr.hw_len = ARP_HW_ADDR_SIZE;
+    hdr.ip_len = ARP_IP_ADDR_SIZE;
+    hdr.opcode = htons(ARP_OP_REQ);
 
     memcpy(&(hdr.sender_hw), sender_hw, ARP_HW_ADDR_SIZE);
     memcpy(&(hdr.sender_ip), sender_ip, ARP_IP_ADDR_SIZE);
@@ -49,6 +50,6 @@ int pdu_arp_request(struct packet *p, const uint8_t *sender_hw,
 
     uint8_t tag = packet_block_append(p, PACKET_BLOCK_ARP, &hdr,
                                       ARP_H_SIZE);
-    
+
     return tag;
 };

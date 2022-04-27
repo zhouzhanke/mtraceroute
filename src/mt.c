@@ -52,12 +52,13 @@
 struct probe *mt_send(struct mt *a, int if_index, const uint8_t *buf,
                       uint32_t len, match_fn fn)
 {
-    // 初始化网络
+    printf("发送...");
+    // 获得本机网络控制
     //如果if_index存在，返回对应的interface；
     //不存在，创建一struct interface实体，并初始化以下：
-    //if_index、hw_addr
-    //link，通过link_open创建一个RAW套接字，套接字创建失败没有处理
-    //probes,一个list
+    // if_index、hw_addr
+    // link，通过link_open创建一个RAW套接字，套接字创建失败没有处理
+    // probes,一个list
     //在i上打开pcap
     //最后将i插入mt的intreface的list中
     struct interface *i = mt_get_interface(a, if_index);
@@ -69,7 +70,7 @@ struct probe *mt_send(struct mt *a, int if_index, const uint8_t *buf,
     struct probe *p = probe_create(buf, len, fn);
 
     // 发送
-    //p->sent_time在sendto时赋值
+    // p->sent_time在sendto时赋值
     link_write(i->link, p->probe, p->probe_len, &(p->sent_time));
 
     // 储存发送探针, 以便在接受时匹配
@@ -92,6 +93,8 @@ struct probe *mt_send(struct mt *a, int if_index, const uint8_t *buf,
     }
     a->probes_count++;
     clock_gettime(CLOCK_REALTIME, &a->last_probe_time);
+
+    printf("done\n");
     return p;
 }
 
@@ -178,20 +181,21 @@ void mt_wait(struct mt *a, int if_index)
     } while (mt_unanswered_probes(a, i) > 0);
 }
 
-struct route *mt_get_route(struct mt *a, const struct addr *dst)
+struct route *mt_get_route(struct mt *meta, const struct addr *dst)
 {
     struct list_item *i = NULL;
-    for (i = a->routes->first; i != NULL; i = i->next)
+    for (i = meta->routes->first; i != NULL; i = i->next)
     {
         struct route *r = (struct route *)i->data;
         int dst_size = (dst->type == ADDR_IPV4) ? ADDR_IPV4_SIZE : ADDR_IPV6_SIZE;
         if (buff_cmp(dst->addr, r->dst->addr, dst_size) == 0)
             return r;
     }
+    // 初始化网卡
     struct route *r = route_create(dst);
     if (r == NULL)
         return NULL;
-    list_insert(a->routes, r);
+    list_insert(meta->routes, r);
     return r;
 }
 
@@ -258,8 +262,7 @@ static void mt_interface_destroy(struct interface *i)
     free(i);
 }
 
-struct neighbor *mt_get_neighbor(struct mt *a, const struct addr *dst,
-                                 int if_index)
+struct neighbor *mt_get_neighbor(struct mt *a, const struct addr *dst, int if_index)
 {
 
     struct list_item *i = NULL;
@@ -384,22 +387,22 @@ int main(int argc, char *argv[])
     //从命令行参数 address,
     //调用addr_create_from_str创建struct addr 实例，两个成员，其一ipv4/ipv6,其二，ip地址
     //调用dst_create创建struct dst实例，主要工作是创建与IP地址对应的路由表项，struct mt中的routes list
-    printf("读取目标地址...\n");
-    struct dst *ip_target = dst_create_from_str(meta, args->dst);
-    if (ip_target == NULL)
+    printf("初始化网络相关...\n");
+    struct dst *address_controller = dst_create_from_str(meta, args->dst);
+    if (address_controller == NULL)
     {
         printf("check the destination address\n");
         mt_destroy(meta);
         free(args);
         return 1;
     }
-    printf("done\n");
+    printf("初始化网络相关...done\n");
 
     // 根据参数分别启动以下3种子程序
     if (args->c == CMD_PING)
     {
         printf("<<<<<开始ping>>>>>\n");
-        mt_ping(meta, ip_target, args->number_of_pings);
+        mt_ping(meta, address_controller, args->number_of_pings);
     }
     else if (args->c == CMD_MDA)
     {
@@ -419,18 +422,18 @@ int main(int argc, char *argv[])
         // FLOW_TCP_TC 12   // tcp-tc
         // default value: max ttl = 30, confidence = 95, flow type = UDP SPORT
         printf("<<<<<开始paris-traceroute(MDA)>>>>>\n");
-        mt_mda(meta, ip_target, args->confidence, args->flow_type, args->max_ttl);
+        mt_mda(meta, address_controller, args->confidence, args->flow_type, args->max_ttl);
     }
     else if (args->c == CMD_TRACEROUTE)
     {
         // m = ICMP/UDP/TCP
         // default values: hops per round = 3, max ttl =30, packet type = ICMP
         printf("<<<<<开始paris-traceroute>>>>>\n");
-        mt_traceroute(meta, ip_target, args->packet_type, args->max_ttl, args->hops_per_round);
+        mt_traceroute(meta, address_controller, args->packet_type, args->max_ttl, args->hops_per_round);
     }
 
     // 清理
-    dst_destroy(ip_target);
+    dst_destroy(address_controller);
     mt_destroy(meta);
     free(args);
 

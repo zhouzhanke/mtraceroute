@@ -38,19 +38,24 @@
 
 #include "iface.h"
 
-struct addr *iface_hw_addr(int if_index) {
+struct addr *iface_hw_addr(int if_index)
+{
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd == -1) return NULL;
+    if (fd == -1)
+        return NULL;
 
     char if_name[IF_NAMESIZE];
-    if (if_indextoname(if_index, if_name) == NULL) goto exit;
+    if (if_indextoname(if_index, if_name) == NULL)
+        goto exit;
 
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, if_name, IF_NAMESIZE-1);
+    strncpy(ifr.ifr_name, if_name, IF_NAMESIZE - 1);
 
-    if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0) goto exit;
-    if (ifr.ifr_hwaddr.sa_family != ARPHRD_ETHER) goto exit;
+    if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0)
+        goto exit;
+    if (ifr.ifr_hwaddr.sa_family != ARPHRD_ETHER)
+        goto exit;
 
     struct addr *addr = addr_create(ADDR_ETHERNET, ifr.ifr_hwaddr.sa_data);
 
@@ -62,22 +67,28 @@ exit:
     return NULL;
 }
 
-struct addr *iface_ip_addr(int if_index, int type) {
+struct addr *iface_ip_addr(int if_index, int type)
+{
     int family = (type == ADDR_IPV4) ? AF_INET : AF_INET6;
 
     char if_name[IF_NAMESIZE];
-    if (if_indextoname(if_index, if_name) == NULL) return NULL;
+    if (if_indextoname(if_index, if_name) == NULL)
+        return NULL;
 
     struct ifaddrs *if_addrs;
-    if (getifaddrs(&if_addrs) == -1) return NULL;
+    if (getifaddrs(&if_addrs) == -1)
+        return NULL;
 
     struct addr *addr = NULL;
 
     struct ifaddrs *ifa;
-    for (ifa = if_addrs; ifa != NULL; ifa = ifa->ifa_next) {
-        if (strcmp(ifa->ifa_name, if_name) != 0) continue;
+    for (ifa = if_addrs; ifa != NULL; ifa = ifa->ifa_next)
+    {
+        if (strcmp(ifa->ifa_name, if_name) != 0)
+            continue;
 
-        if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == family) {
+        if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == family)
+        {
             addr = addr_create_from_sockaddr(ifa->ifa_addr);
             break;
         }

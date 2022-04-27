@@ -34,7 +34,8 @@
 
 #define UDP_H_SIZE 8
 
-struct udp_hdr {
+struct udp_hdr
+{
     uint16_t src_port;
     uint16_t dst_port;
     uint16_t length;

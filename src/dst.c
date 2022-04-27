@@ -32,7 +32,7 @@
 #include "iface.h"
 #include "dst.h"
 
-struct dst *dst_create(struct mt *a, struct addr *ip_dst)
+struct dst *dst_create(struct mt *meta, struct addr *ip_dst)
 {
 
     struct dst *d = malloc(sizeof(*d));
@@ -40,7 +40,8 @@ struct dst *dst_create(struct mt *a, struct addr *ip_dst)
         return NULL;
     memset(d, 0, sizeof(*d));
 
-    struct route *r = mt_get_route(a, ip_dst);
+    // 获得网卡
+    struct route *r = mt_get_route(meta, ip_dst);
 
     if (r == NULL)
     {
@@ -48,8 +49,8 @@ struct dst *dst_create(struct mt *a, struct addr *ip_dst)
         return NULL;
     }
 
-    // 尝试获取终点邻近目标？...
-    struct neighbor *n = mt_get_neighbor(a, r->gateway, r->if_index);
+    // 获得目标网卡信息
+    struct neighbor *n = mt_get_neighbor(meta, r->gateway, r->if_index);
 
     if (n == NULL)
     {
@@ -58,7 +59,8 @@ struct dst *dst_create(struct mt *a, struct addr *ip_dst)
         return NULL;
     }
 
-    struct interface *i = mt_get_interface(a, r->if_index);
+    // 获得本机网卡信息
+    struct interface *i = mt_get_interface(meta, r->if_index);
 
     if (i == NULL)
     {
@@ -86,7 +88,7 @@ struct dst *dst_create(struct mt *a, struct addr *ip_dst)
     return d;
 }
 
-struct dst *dst_create_from_str(struct mt *a, const char *addr_str)
+struct dst *dst_create_from_str(struct mt *meta, const char *addr_str)
 {
     // try to guess the type of the addr
     int type = addr_guess_type(addr_str);
@@ -95,7 +97,7 @@ struct dst *dst_create_from_str(struct mt *a, const char *addr_str)
 
     struct addr *addr = addr_create_from_str(type, addr_str);
 
-    struct dst *dst = dst_create(a, addr);
+    struct dst *dst = dst_create(meta, addr);
     if (dst == NULL)
     {
         addr_destroy(addr);

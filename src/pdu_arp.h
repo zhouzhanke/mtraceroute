@@ -37,19 +37,20 @@
 
 #define ARP_HW_ADDR_SIZE 6
 #define ARP_IP_ADDR_SIZE 4
-#define ARP_HW_TYPE_ETH  1
+#define ARP_HW_TYPE_ETH 1
 #define ARP_IP_TYPE_IPV4 0x0800
 
-struct arp_hdr {
+struct arp_hdr
+{
     uint16_t hw_type;
     uint16_t ip_type;
-    uint8_t  hw_len;
-    uint8_t  ip_len;
+    uint8_t hw_len;
+    uint8_t ip_len;
     uint16_t opcode;
-    uint8_t  sender_hw[ARP_HW_ADDR_SIZE];
-    uint8_t  sender_ip[ARP_IP_ADDR_SIZE];
-    uint8_t  target_hw[ARP_HW_ADDR_SIZE];
-    uint8_t  target_ip[ARP_IP_ADDR_SIZE];
+    uint8_t sender_hw[ARP_HW_ADDR_SIZE];
+    uint8_t sender_ip[ARP_IP_ADDR_SIZE];
+    uint8_t target_hw[ARP_HW_ADDR_SIZE];
+    uint8_t target_ip[ARP_IP_ADDR_SIZE];
 };
 
 int pdu_arp_request(struct packet *p, const uint8_t *sender_hw,

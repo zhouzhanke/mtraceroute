@@ -639,7 +639,7 @@ static int next_hops(struct mda *mda, char *addr, int ttl, struct list *flows,
         {
             sent++;
         }
-        // 如果不满足mda算法的数量，继续发送
+        // 如果flow不满足mda算法的数量，继续发送
         else if (sent < mda_number)
         {
             mda_send(mda, f->flow_id, f->flow_id, ttl + 1);
