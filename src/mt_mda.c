@@ -97,12 +97,12 @@ static void next_hop_destroy(struct next_hop *nh)
 struct mda
 {
     char *root;
-    int max_ttl;
-    int confidence;
-    int flow_type;
-    struct list *flow_list;
-    struct mt *mt;
-    struct dst *dst;
+    int max_ttl;            // 指定的最大探测跳数
+    int confidence;         // 负载均衡路径覆盖率
+    int flow_type;          // 选择的探针控制类型，IPv4有6种，IPv6有12种
+    struct list *flow_list; // 储存所有探测结果（流标识符）
+    struct mt *mt;          // 存入mt进行快捷调用
+    struct dst *dst;        // 地址和网卡
 };
 
 static struct mda *mda_create(struct mt *meta, struct dst *address, int flow_type, int confidence, int max_ttl)
@@ -977,6 +977,7 @@ static int mda(struct mda *mda)
                 {
                     more_flows(mda, addr, ttl, mda_number - flows->count);
                     list_destroy(flows);
+                    // 更新当前TTL的flow
                     flows = get_flows(mda, ttl, addr);
                 }
 

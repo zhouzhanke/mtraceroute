@@ -38,7 +38,7 @@ struct dst
     struct addr *ip_src;
     struct addr *mac_dst;
     struct addr *mac_src;
-    int if_index;
+    int if_index; // 网卡
 };
 
 struct dst *dst_create(struct mt *a, struct addr *ip_dst);

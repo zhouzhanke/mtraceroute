@@ -43,19 +43,17 @@
 
 struct mt
 {
-    struct list *interfaces;
-    struct list *neighbors;
-    struct list *routes;
-
-    int retries;
-    int probe_timeout;
-    struct timespec send_wait;
-
+    struct list *interfaces;   // 本机网卡信息
+    struct list *neighbors;    // 目标网卡信息
+    struct list *routes;       // 获得网卡
+    int retries;               // 重发次数
+    int probe_timeout;         // 回收探针最大时间
+    struct timespec send_wait; // 发送间隔时间
     // Statistics
-    int probes_count;
-    struct timespec init_time;
-    struct timespec first_probe_time;
-    struct timespec last_probe_time;
+    int probes_count;                 // 发送的探针计数
+    struct timespec init_time;        // 程序启动时间
+    struct timespec first_probe_time; // 第一次发送时间
+    struct timespec last_probe_time;  // 最后一次发送时间
 };
 
 struct interface

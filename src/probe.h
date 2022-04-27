@@ -44,7 +44,7 @@ struct probe
     uint32_t probe_len;
     uint8_t *response;
     uint32_t response_len;
-    match_fn fn;
+    match_fn fn; // 在发送时存入比较函数
 };
 
 struct probe *probe_create(const uint8_t *probe, uint32_t probe_len, match_fn fn);

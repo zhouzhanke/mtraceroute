@@ -36,7 +36,7 @@ struct list {
 };
 
 struct list_item {
-    void *data;
+    void *data; // 在MDA中存储flow_ttl
     struct list_item *next;
     struct list_item *previous;
 };
