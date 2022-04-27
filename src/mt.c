@@ -388,8 +388,8 @@ int main(int argc, char *argv[])
     //调用addr_create_from_str创建struct addr 实例，两个成员，其一ipv4/ipv6,其二，ip地址
     //调用dst_create创建struct dst实例，主要工作是创建与IP地址对应的路由表项，struct mt中的routes list
     printf("初始化网络相关...\n");
-    struct dst *address_controller = dst_create_from_str(meta, args->dst);
-    if (address_controller == NULL)
+    struct dst *address = dst_create_from_str(meta, args->dst);
+    if (address == NULL)
     {
         printf("check the destination address\n");
         mt_destroy(meta);
@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
     if (args->c == CMD_PING)
     {
         printf("<<<<<开始ping>>>>>\n");
-        mt_ping(meta, address_controller, args->number_of_pings);
+        mt_ping(meta, address, args->number_of_pings);
     }
     else if (args->c == CMD_MDA)
     {
@@ -422,18 +422,18 @@ int main(int argc, char *argv[])
         // FLOW_TCP_TC 12   // tcp-tc
         // default value: max ttl = 30, confidence = 95, flow type = UDP SPORT
         printf("<<<<<开始paris-traceroute(MDA)>>>>>\n");
-        mt_mda(meta, address_controller, args->confidence, args->flow_type, args->max_ttl);
+        mt_mda(meta, address, args->confidence, args->flow_type, args->max_ttl);
     }
     else if (args->c == CMD_TRACEROUTE)
     {
         // m = ICMP/UDP/TCP
         // default values: hops per round = 3, max ttl =30, packet type = ICMP
         printf("<<<<<开始paris-traceroute>>>>>\n");
-        mt_traceroute(meta, address_controller, args->packet_type, args->max_ttl, args->hops_per_round);
+        mt_traceroute(meta, address, args->packet_type, args->max_ttl, args->hops_per_round);
     }
 
     // 清理
-    dst_destroy(address_controller);
+    dst_destroy(address);
     mt_destroy(meta);
     free(args);
 

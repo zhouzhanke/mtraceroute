@@ -82,7 +82,16 @@
   },
   "cSpell.words": [
     "Almeida",
+    "libpcap",
+    "mtraceroute",
+    "Multipath",
     "rlca",
+    "traceroute",
     "ufmg"
-  ]
+  ],
+  "cSpell.ignoreWords": [
+    "autoreconf",
+    "pacp"
+  ],
+  "C_Cpp.errorSquiggles": "Disabled"
 }

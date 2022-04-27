@@ -87,10 +87,10 @@ static void ping6_print(const struct probe *p)
     free(time);
 }
 
-int mt_ping(struct mt *meta, const struct dst *ip_target, int number_of_pings)
+int mt_ping(struct mt *meta, const struct dst *address, int number_of_pings)
 {
-    if (ip_target->ip_dst->type != ADDR_IPV4 &&
-        ip_target->ip_dst->type != ADDR_IPV6)
+    if (address->ip_dst->type != ADDR_IPV4 &&
+        address->ip_dst->type != ADDR_IPV6)
         return -1;
 
     int probe_count = 0;
@@ -101,34 +101,34 @@ int mt_ping(struct mt *meta, const struct dst *ip_target, int number_of_pings)
 
         // 发送探针
         printf("发送探针...\n");
-        if (ip_target->ip_dst->type == ADDR_IPV4)
+        if (address->ip_dst->type == ADDR_IPV4)
         {
-            p = packet_helper_echo4(ip_target->mac_dst->addr, ip_target->mac_src->addr,
-                                    ip_target->ip_src->addr, ip_target->ip_dst->addr,
+            p = packet_helper_echo4(address->mac_dst->addr, address->mac_src->addr,
+                                    address->ip_src->addr, address->ip_dst->addr,
                                     IPV4_TTL, IP_ID + probe_count, ICMP_ID,
                                     probe_count, CHECKSUM);
-            mt_send(meta, ip_target->if_index, p->buf, p->length, &match_icmp4);
+            mt_send(meta, address->if_index, p->buf, p->length, &match_icmp4);
         }
-        else if (ip_target->ip_dst->type == ADDR_IPV6)
+        else if (address->ip_dst->type == ADDR_IPV6)
         {
-            p = packet_helper_echo6(ip_target->mac_dst->addr, ip_target->mac_src->addr,
-                                    ip_target->ip_src->addr, ip_target->ip_dst->addr,
+            p = packet_helper_echo6(address->mac_dst->addr, address->mac_src->addr,
+                                    address->ip_src->addr, address->ip_dst->addr,
                                     0, 0, IPV6_HOP_LIMIT, ICMP_ID, probe_count, CHECKSUM);
-            mt_send(meta, ip_target->if_index, p->buf, p->length, &match_icmp6);
+            mt_send(meta, address->if_index, p->buf, p->length, &match_icmp6);
         }
 
         printf("回收探针或重发探针...\n");
-        mt_wait(meta, ip_target->if_index);
+        mt_wait(meta, address->if_index);
 
-        struct interface *i = mt_get_interface(meta, ip_target->if_index);
+        struct interface *i = mt_get_interface(meta, address->if_index);
         struct probe *probe = (struct probe *)list_pop(i->probes);
 
         printf("打印结果...\n");
-        if (ip_target->ip_dst->type == ADDR_IPV4)
+        if (address->ip_dst->type == ADDR_IPV4)
         {
             ping4_print(probe);
         }
-        else if (ip_target->ip_dst->type == ADDR_IPV6)
+        else if (address->ip_dst->type == ADDR_IPV6)
         {
             ping6_print(probe);
         }

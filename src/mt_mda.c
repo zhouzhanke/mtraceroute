@@ -105,7 +105,7 @@ struct mda
     struct dst *dst;
 };
 
-static struct mda *mda_create(struct mt *a, struct dst *d, int flow_type, int confidence, int max_ttl)
+static struct mda *mda_create(struct mt *meta, struct dst *address, int flow_type, int confidence, int max_ttl)
 {
     struct mda *mda = malloc(sizeof(*mda));
     if (mda == NULL)
@@ -116,8 +116,8 @@ static struct mda *mda_create(struct mt *a, struct dst *d, int flow_type, int co
     mda->max_ttl = max_ttl;
     mda->flow_type = flow_type;
     mda->flow_list = list_create();
-    mda->mt = a;
-    mda->dst = d;
+    mda->mt = meta;
+    mda->dst = address;
     return mda;
 }
 
@@ -1025,11 +1025,11 @@ static int mda(struct mda *mda)
 
 // 创建struct mda的一个实例，然后执行多路径探测mda
 // 输入参数：struct mt；目的地址（单个地址）；置信度；流ID类型；最大TTL
-int mt_mda(struct mt *a, struct dst *dst, int confidence,
+int mt_mda(struct mt *meta, struct dst *address, int confidence,
            int flow_type, int max_ttl)
 {
 
-    // 获取率百分比,90%，95%，99%
+    // 负载均衡路径获取率百分比,90%，95%，99%
     if (confidence == 90)
         confidence = 0;
     else if (confidence == 95)
@@ -1037,9 +1037,10 @@ int mt_mda(struct mt *a, struct dst *dst, int confidence,
     else if (confidence == 99)
         confidence = 2;
 
-    if (dst->ip_dst->type == ADDR_IPV4 || dst->ip_dst->type == ADDR_IPV6)
+    if (address->ip_dst->type == ADDR_IPV4 || address->ip_dst->type == ADDR_IPV6)
     {
-        struct mda *m = mda_create(a, dst, flow_type, confidence, max_ttl);
+        struct mda *m = mda_create(meta, address, flow_type, confidence, max_ttl);
+        // 没有处理特殊情况
         int result = mda(m);
         mda_destroy(m);
         return result;
