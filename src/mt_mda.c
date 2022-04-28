@@ -921,22 +921,23 @@ static int mda(struct mda *mda)
         add_flow(mda, ttl, MDA_MIN_FLOW_ID + i, mda->root, -1);
     }
 
+    // 开始mda探测
     for (ttl; ttl <= mda->max_ttl; ttl++)
     {
-        // 读取特定TTL的flow列表来用作本次循环次数的依据
+        // 从mda的flow_list读取特定TTL的探测结果列表来用作之后循环次数的依据
+        // 这样我们就可以对每跳的所有响应分别进行下一跳的探测
+        // 初始化为root并且有伪造数据
+        // 这样，程序执行过程就统一为“分析响应”->"发现该响应的下一跳接口"
         struct list *addrs_ttl = get_flows_ttl(mda, ttl);
 
-        // 执行MDA
-        //取一个发送响应的IP地址  初始化时为"root"，之后为发送响应的IP
-        //这里，编程者用了一技巧，就是初始状态收到了n个来自“root”的响应；
-        //这样，程序执行过程就统一为“分析响应”->"发现该响应的下一跳接口"
+        
         while (addrs_ttl->count > 0)
         {
             struct flow_ttl *flow_ttl = (struct flow_ttl *)list_pop(addrs_ttl);
             char *addr = flow_ttl->response;
             char *addr_dst = addr_to_str(mda->dst->ip_dst);
 
-            // 当达到目标IP时不继续探测
+            // 当达到目标IP时停止这一轮的探测
             if (strcmp(addr, addr_dst) == 0)
             {
                 free(addr_dst);
@@ -954,36 +955,38 @@ static int mda(struct mda *mda)
                 continue;
             }
 
-            // this->count 用来更新MDA flow数量
-            // this->probe 用来输出结果
+            // next_hop_list->count 用来更新MDA flow数量,对应算法表中的n
+            // next_hop_list->probe 用存储探针
             struct list *next_hop_list = list_create();
             int flows_sent = 0;
-            // 用来判断while循环的flag，应该可以改进
+            // 用来判断while循环的flag
             int new_next_hop = 1;
+            // 开始探测下一跳
             while (new_next_hop)
             {
                 //返回当前TTL下addr(响应IP)对应的flow ID
                 struct list *flows = get_flows(mda, ttl, addr);
 
+                // 规避特殊情况
                 int total_next_hops = next_hop_list->count;
                 if (next_hop_list->count == 0)
                     total_next_hops = 1;
 
-                // 读取MDA算法表
+                // 读取MDA算法表，遵循下一跳响应数n+1的原则。
                 mda_number = k[total_next_hops + 1][mda->confidence];
 
-                // 如果当前flow数量不满足MDA算法表，增加flow数量并发送探针
+                // 如果当前跳flow数量不满足MDA算法表，补发探针
                 if (flows->count < mda_number)
                 {
                     more_flows(mda, addr, ttl, mda_number - flows->count);
                     list_destroy(flows);
-                    // 更新当前TTL的flow
+                    // 更新，用作next_hops循环
                     flows = get_flows(mda, ttl, addr);
                 }
 
-                // 发送探针判断下一跳有多少个新的目标，并以此为依据读取MDA算法表
+                // 发送探针判断下一跳有多少个响应，并以此为依据更新MDA算法表结果,n=?k=?
                 // next_hope_list是更新MDA的依据
-                // 返回结果是决定是否结束循环的依据，应该可以改进
+                // 返回结果是决定是否结束循环的依据，除了ttl+1之外，和more_flows基本相同
                 new_next_hop = next_hops(mda, addr, ttl, flows, mda_number, &flows_sent, next_hop_list);
 
                 // 特殊情况下结束循环
@@ -993,6 +996,7 @@ static int mda(struct mda *mda)
             }
 
             // 判断下一跳是否是per-packet负载均衡
+            // 发送几个探针到下一跳，如果返回结果唯一，则是per-flow负载均衡
             int per_packet = 0;
             if (next_hop_list->count > 1)
             {
@@ -1026,11 +1030,12 @@ static int mda(struct mda *mda)
 
 // 创建struct mda的一个实例，然后执行多路径探测mda
 // 输入参数：struct mt；目的地址（单个地址）；置信度；流ID类型；最大TTL
+// 执行mda之前的准备阶段
 int mt_mda(struct mt *meta, struct dst *address, int confidence,
            int flow_type, int max_ttl)
 {
 
-    // 负载均衡路径获取率百分比,90%，95%，99%
+    // 负载均衡路径获取率百分比,90%，95%，99%,从用户输入参数转换为系统参数
     if (confidence == 90)
         confidence = 0;
     else if (confidence == 95)
@@ -1040,9 +1045,11 @@ int mt_mda(struct mt *meta, struct dst *address, int confidence,
 
     if (address->ip_dst->type == ADDR_IPV4 || address->ip_dst->type == ADDR_IPV6)
     {
+        // 整合信息
         struct mda *m = mda_create(meta, address, flow_type, confidence, max_ttl);
         // 没有处理特殊情况
-        int result = mda(m);
+        // 执行mda程序
+        int result = mda(m); 
         mda_destroy(m);
         return result;
     }

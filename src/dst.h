@@ -34,10 +34,10 @@
 
 struct dst
 {
-    struct addr *ip_dst;
-    struct addr *ip_src;
-    struct addr *mac_dst;
-    struct addr *mac_src;
+    struct addr *ip_dst; // 目标IP
+    struct addr *ip_src; // 本机IP
+    struct addr *mac_dst; // 目标MAC
+    struct addr *mac_src; // 本机MAC
     int if_index; // 网卡
 };
 

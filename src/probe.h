@@ -36,14 +36,14 @@ typedef int (*match_fn)(const uint8_t *, uint32_t, const uint8_t *, uint32_t);
 
 struct probe
 {
-    int if_index;
-    int retries;
-    struct timespec sent_time;
-    struct timespec response_time;
-    uint8_t *probe;
-    uint32_t probe_len;
-    uint8_t *response;
-    uint32_t response_len;
+    int if_index; // 网络
+    int retries; // 已重试次数
+    struct timespec sent_time; // 发送时间
+    struct timespec response_time; // 回收时间
+    uint8_t *probe; // 探针
+    uint32_t probe_len; // 探针数据长度
+    uint8_t *response; // 探针返回结果
+    uint32_t response_len; // 返回数据长度
     match_fn fn; // 在发送时存入比较函数
 };
 

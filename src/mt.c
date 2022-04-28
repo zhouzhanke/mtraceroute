@@ -375,7 +375,8 @@ int main(int argc, char *argv[])
         return 1;
     printf("done\n");
 
-    // 初始化与网络相关的信息，interfaces, neighbors,routes
+    // 初始化基本信息
+    // interfaces, neighbors,routes
     // 缺少null错误处理
     // 发送探针时，只制定目标地址，没有指定网卡
     // default values, probe time out=1,send_wait=20,retries=2,probes_count=0
@@ -383,8 +384,9 @@ int main(int argc, char *argv[])
     struct mt *meta = mt_create(args->probe_time_out, args->send_wait, args->retries);
     printf("done\n");
 
-    // 读取目标地址并检查
-    //从命令行参数 address,
+    // 初始化地址和网络相关
+    // interfaces, neighbors,routes 存入 mt
+    // 部分信息存入 dst
     //调用addr_create_from_str创建struct addr 实例，两个成员，其一ipv4/ipv6,其二，ip地址
     //调用dst_create创建struct dst实例，主要工作是创建与IP地址对应的路由表项，struct mt中的routes list
     printf("初始化网络相关...\n");
@@ -398,7 +400,7 @@ int main(int argc, char *argv[])
     }
     printf("初始化网络相关...done\n");
 
-    // 根据参数分别启动以下3种子程序
+    // 根据参数启动子程序
     if (args->c == CMD_PING)
     {
         printf("<<<<<开始ping>>>>>\n");
