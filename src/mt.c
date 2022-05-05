@@ -87,6 +87,7 @@ struct probe *mt_send(struct mt *a, int if_index, const uint8_t *buf,
         }
     }
 
+    // time record
     if (a->probes_count == 0)
     {
         clock_gettime(CLOCK_REALTIME, &a->first_probe_time);
@@ -157,6 +158,7 @@ static int mt_unanswered_probes(struct mt *a, struct interface *i)
 // 尝试接收所有是未收到响应的探针的的响应包，前述几个例外除外
 void mt_wait(struct mt *a, int if_index)
 {
+    // get network
     struct interface *i = mt_get_interface(a, if_index);
     do
     {
@@ -222,6 +224,7 @@ fail:
 struct interface *mt_get_interface(struct mt *a, int if_index)
 {
     struct list_item *it = NULL;
+    // return network interface if exist
     for (it = a->interfaces->first; it != NULL; it = it->next)
     {
         struct interface *interface = (struct interface *)it->data;
@@ -229,13 +232,14 @@ struct interface *mt_get_interface(struct mt *a, int if_index)
             return interface;
     }
 
+    // otherwise create new network interface
     struct interface *i = malloc(sizeof(*i));
     if (i == NULL)
         return NULL;
     memset(i, 0, sizeof(*i));
     i->if_index = if_index;
     if_indextoname(if_index, i->if_name);
-    // find mac address
+    // get mac address
     i->hw_addr = iface_hw_addr(if_index);
     // 使用socket开启网络
     i->link = link_open(if_index);
@@ -245,6 +249,7 @@ struct interface *mt_get_interface(struct mt *a, int if_index)
     // use pcap to capture packets
     interface_pcap_open(i);
 
+    // save
     list_insert(a->interfaces, i);
     return i;
 }

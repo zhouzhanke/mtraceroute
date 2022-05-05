@@ -178,11 +178,15 @@ static void mda_send(struct mda *m, uint16_t flow_id,
         if (m->flow_type == FLOW_UDP_DST)
         {
 
+            // more control on destination address
             struct addr *dst_fid = flow_id_to_addr(m->dst->ip_dst, flow_id);
+            // create packet
             p = packet_helper_udp4(m->dst->mac_dst->addr, m->dst->mac_src->addr,
                                    m->dst->ip_src->addr, dst_fid->addr, ttl,
                                    0, MDA_UDP_SPORT, MDA_UDP_DPORT, probe_id);
+            // send packet
             mt_send(m->mt, m->dst->if_index, p->buf, p->length, &match_udp4);
+            // clean
             addr_destroy(dst_fid);
         }
         // extra control on UDP header source port
@@ -929,7 +933,6 @@ static int mda(struct mda *mda)
         // 这样，程序执行过程就统一为“分析响应”->"发现该响应的下一跳接口"
         struct list *addrs_ttl = get_flows_ttl(mda, ttl);
 
-        
         while (addrs_ttl->count > 0)
         {
             struct flow_ttl *flow_ttl = (struct flow_ttl *)list_pop(addrs_ttl);
@@ -1048,7 +1051,7 @@ int mt_mda(struct mt *meta, struct dst *address, int confidence,
         struct mda *m = mda_create(meta, address, flow_type, confidence, max_ttl);
         // 没有处理特殊情况
         // 执行mda程序
-        int result = mda(m); 
+        int result = mda(m);
         mda_destroy(m);
         return result;
     }

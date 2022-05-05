@@ -182,8 +182,7 @@ struct packet *packet_helper_udp6(const uint8_t *eth_dst, const uint8_t *eth_src
     {
         // Exchange the 2 bytes data with the checksum
         uint8_t *data_buf = (uint8_t *)packet_buf_get_by_tag(p, data_tag);
-        struct udp_hdr *udp_buf = (struct udp_hdr *)
-            packet_buf_get_by_tag(p, udp_tag);
+        struct udp_hdr *udp_buf = (struct udp_hdr *)packet_buf_get_by_tag(p, udp_tag);
         buff_swap(data_buf, (uint8_t *)&udp_buf->checksum, 2);
     }
 
