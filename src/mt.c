@@ -235,13 +235,14 @@ struct interface *mt_get_interface(struct mt *a, int if_index)
     memset(i, 0, sizeof(*i));
     i->if_index = if_index;
     if_indextoname(if_index, i->if_name);
+    // find mac address
     i->hw_addr = iface_hw_addr(if_index);
     // 使用socket开启网络
     i->link = link_open(if_index);
     i->probes = list_create();
     if (i->probes == NULL)
         return NULL;
-    // 使用pcap控制网络
+    // use pcap to capture packets
     interface_pcap_open(i);
 
     list_insert(a->interfaces, i);

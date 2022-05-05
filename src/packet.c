@@ -84,7 +84,7 @@ int packet_block_append(struct packet *p, uint8_t type, const void *buf,
     b->length = len;
     b->position = p->length;
 
-    // Check if we have enough memory
+    // Check if we have enough memory, resize if not enough memory
     if ((p->alloc - p->length) < len)
     {
         uint32_t new_size = p->length + len + PACKET_ALLOC_EXTRA;

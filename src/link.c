@@ -82,6 +82,7 @@ int link_write(struct link *l, uint8_t *buf, uint32_t len, struct timespec *t)
     if (t != NULL)
         clock_gettime(CLOCK_REALTIME, t);
 
+
     int sent = sendto(l->fd, buf, len, 0, (struct sockaddr *)addr_ll,
                       sizeof(struct sockaddr_ll));
 

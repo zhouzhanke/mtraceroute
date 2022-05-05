@@ -684,7 +684,6 @@ static int next_hops(struct mda *mda, char *addr, int ttl, struct list *flows,
 
 static void more_flows(struct mda *mda, char *addr, int ttl, int number_of_new_flows)
 {
-    // 理论上不会触发
     if (ttl == 0)
     {
         int found = 0;

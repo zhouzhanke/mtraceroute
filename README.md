@@ -14,6 +14,10 @@ Multipath traceroute (`mtraceroute`) is based on and implements similar function
 
 Linux, gcc, libpcap and root access
 
+gcc: 7 or 9  (tested)
+
+libpcap: 0.8 (tested, can get lateset version at https://github.com/the-tcpdump-group/libpcap)
+
 ## Usage
 ```
 mtraceroute ADDRESS [-c command] [-w wait] [-z send-wait]

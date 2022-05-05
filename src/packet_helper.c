@@ -132,6 +132,7 @@ struct packet *packet_helper_udp4(const uint8_t *eth_dst, const uint8_t *eth_src
         data_tag = pdu_data(p, (uint8_t *)&data, 2);
     }
 
+    // calculate checksum
     pdu_ipv4_length(p, ip_tag);
     pdu_ipv4_checksum(p, ip_tag);
     pdu_udp_length(p, udp_tag);
