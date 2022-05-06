@@ -392,6 +392,7 @@ static int get_nth_flow_id_available(struct mda *mda, int n, int ttl)
 {
     int nth = 0;
     int flow_id = 0;
+    // 每跳的最大流数量被限制到255
     for (flow_id = MDA_MIN_FLOW_ID; flow_id <= MDA_MAX_FLOW_ID; flow_id++)
     {
         if (has_flow_id(mda, ttl, flow_id) == 0)
@@ -717,6 +718,8 @@ static void more_flows(struct mda *mda, char *addr, int ttl, int number_of_new_f
         int i = 0;
         for (i = 1; i <= send; i++)
         {
+            // 获取flow id，最大255,也就是每条的最大流数量被限制在255，
+            // 每条最大流数被限制在255，但是mda_number在totle_next_hops大约等于35的时候就超过了255
             int flow_id = get_nth_flow_id_available(mda, i, ttl);
             if (flow_id == -1)
             {
@@ -980,6 +983,7 @@ static int mda(struct mda *mda)
                 // 如果当前跳flow数量不满足MDA算法表，补发探针
                 if (flows->count < mda_number)
                 {
+                    // 每条最大流数被限制在255，但是mda_number在totle_next_hops大约等于35的时候就超过了255
                     more_flows(mda, addr, ttl, mda_number - flows->count);
                     list_destroy(flows);
                     // 更新，用作next_hops循环
